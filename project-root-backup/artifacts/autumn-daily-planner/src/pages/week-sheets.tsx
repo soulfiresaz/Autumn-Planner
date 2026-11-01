@@ -5,7 +5,7 @@ import { usePlannerStore } from '@/lib/planner-store';
 import { TaskRow } from '@/components/tasks';
 import { addDays, dayNumber, fmtMonthDayShort, fmtWeekday, fmtWeekdayShort, inRange, weekNumber, weekRangeLabel, WEEKS } from '@/lib/dates';
 import { HABIT_ROWS, useHabits } from '@/lib/habits';
-import { WEEK_TASK_SLOTS, useItems } from '@/lib/tasks';
+import { WEEK_TASK_SLOTS, isProjectScope, useItems } from '@/lib/tasks';
 
 const LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const weekDays = (ws: string) => Array.from({ length: 7 }, (_, i) => addDays(ws, i));
@@ -63,7 +63,9 @@ function WeekTasksBody({ ws }: { ws: string }) {
   return (
     <>
       <div className="section-label"><span className="label-dot" />This week &middot; no day yet</div>
-      {range(WEEK_TASK_SLOTS).map(n => <TaskRow key={n} meta item={{ scope: `w:${ws}`, prefix: 't', n }} name={`wt-${n}`} />)}
+      <p className="soft-hint">Give a task a <b>due day</b> and mark it <b>High</b>, and it appears on that day&rsquo;s page. High without a due day appears on every day this week until you check it off.</p>
+      <div className="task-head" aria-hidden="true"><span /><span>Task</span><span>Priority &middot; due day</span></div>
+      {range(WEEK_TASK_SLOTS).map(n => <TaskRow key={n} meta="week" item={{ scope: `w:${ws}`, prefix: 't', n }} name={`wt-${n}`} />)}
       <div className="section-label sched-label"><span className="label-dot" />Already on a day this week</div>
       {scheduled.length === 0 ? (
         <p className="soft-hint">Tasks you write on a day&rsquo;s page will gather here, so the week is easy to see at once.</p>
@@ -156,11 +158,16 @@ function ReviewBody({ ws }: { ws: string }) {
   const days = weekDays(ws);
   const { names, isDone } = useHabits(ws);
   const inWeek = (scope: string) => scope === `w:${ws}` || (scope.startsWith('d:') && days.includes(scope.slice(2)));
-  const finished = items.filter(i => inWeek(i.scope) && i.done);
+  const { values } = usePlannerStore();
+  const doneThisWeek = (i: { scope: string; prefix: 't' | 'p'; n: number }) => {
+    const on = values[`${i.scope}:${i.prefix}-${i.n}-doneon`];
+    return typeof on === 'string' && days.includes(on);
+  };
+  const finished = items.filter(i => i.done && (isProjectScope(i.scope) ? doneThisWeek(i) : inWeek(i.scope)));
   const moved = items.filter(i => inWeek(i.scope) && i.moved);
   const open = items.filter(i => inWeek(i.scope) && !i.done && !i.moved);
   const habits = names.map((n, r) => ({ n, r })).filter(h => h.n.trim());
-  const label = (scope: string) => (scope.startsWith('d:') ? fmtMonthDayShort(scope.slice(2)) : 'week list');
+  const label = (scope: string) => (scope.startsWith('d:') ? fmtMonthDayShort(scope.slice(2)) : scope.startsWith('pj:') ? 'project' : 'week list');
   return (
     <>
       <div className="review-stats">

@@ -1,69 +1,118 @@
 import { useState } from 'react';
+import { ArrowLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'wouter';
-import { MoveMenu, whereHref } from '@/components/tasks';
-import { RANGE_END, RANGE_START, clampToRange, fmtMonthDayShort, inRange, isValidISO, todayISO } from '@/lib/dates';
-import { useRawField, usePlannerStore } from '@/lib/planner-store';
-import { PROJECT_SLOTS, keyOf, planAdd, scopeDate, useItems } from '@/lib/tasks';
+import { TaskRow } from '@/components/tasks';
+import { usePlannerStore, useRawField } from '@/lib/planner-store';
+import { PROJECT_SLOTS, planAdd, projectScope, useItems } from '@/lib/tasks';
 import { PlainPage } from './plain-page';
 
-function ProjectCard({ id }: { id: number }) {
-  const [name, setName] = useRawField(`proj:${id}:name`);
-  const [next, setNext] = useRawField(`proj:${id}:next`);
-  const [notes, setNotes] = useRawField(`proj:${id}:notes`);
-  const items = useItems().filter(i => i.proj === String(id));
-  const { values, setMany, setValue } = usePlannerStore();
-  const [text, setText] = useState('');
-  const [date, setDate] = useState(clampToRange(todayISO()));
-  const [msg, setMsg] = useState('');
-  const open = items.filter(i => !i.done && !i.moved);
-  const done = items.filter(i => i.done);
+function AddProject() {
+  const { values, setValue } = usePlannerStore();
+  const [name, setName] = useState('');
+  const full = !Array.from({ length: PROJECT_SLOTS }, (_, i) => i).some(i => !String(values[`proj:${i}:name`] ?? '').trim());
   const add = () => {
-    if (!text.trim()) return;
-    if (!isValidISO(date) || !inRange(date)) { setMsg('Pick a day between Nov 1 and Jan 31.'); return; }
-    const plan = planAdd(values, `d:${date}`, text.trim(), String(id));
-    if ('error' in plan) { setMsg(plan.error); return; }
-    setMany(plan.updates); setText(''); setMsg('');
+    const text = name.trim();
+    if (!text) return;
+    for (let i = 0; i < PROJECT_SLOTS; i++) {
+      if (!String(values[`proj:${i}:name`] ?? '').trim()) { setValue(`proj:${i}:name`, text); setName(''); return; }
+    }
   };
+  if (full) return <p className="soft-hint">That&rsquo;s all {PROJECT_SLOTS} project spaces.</p>;
   return (
-    <section className="project-card" data-testid={`project-${id}`}>
-      <input className="project-name" placeholder="Name a project" value={name} onChange={e => setName(e.target.value)} aria-label={`Project ${id + 1} name`} data-testid={`project-name-${id}`} />
-      {name.trim() && (
-        <>
-          <label className="mini-field"><span className="mini-cap">Next step</span><input className="field-input" value={next} onChange={e => setNext(e.target.value)} data-testid={`project-next-${id}`} /></label>
-          <label className="mini-field"><span className="mini-cap">Notes</span><textarea className="field-textarea ruled-area project-notes" value={notes} onChange={e => setNotes(e.target.value)} /></label>
-          <div className="section-label"><span className="label-dot" />Tasks &middot; {open.length} open{done.length ? `, ${done.length} done` : ''}</div>
-          {open.map(i => (
-            <div className="project-task" key={`${i.scope}${i.prefix}${i.n}`}>
-              <input type="checkbox" className="check-input" aria-label={`Mark done: ${i.text}`} onChange={e => setValue(keyOf(i, 'done'), e.target.checked)} />
-              <span className="project-task-text">{i.text}</span>
-              <Link href={whereHref(i.scope)} className="task-where">{i.scope.startsWith('d:') ? fmtMonthDayShort(scopeDate(i.scope)) : 'week list'}</Link>
-              <MoveMenu item={i} label="Bring this task to another day" />
-            </div>
-          ))}
-          <form className="add-task slim" onSubmit={e => { e.preventDefault(); add(); }}>
-            <input className="add-text" placeholder="Add a task for this project…" value={text} onChange={e => setText(e.target.value)} aria-label="New project task" data-testid={`project-add-text-${id}`} />
-            <input type="date" className="add-date" min={RANGE_START} max={RANGE_END} value={date} onChange={e => setDate(e.target.value)} aria-label="Day for the task" />
-            <button type="submit" className="chip-link is-accent" data-testid={`project-add-${id}`}>Add</button>
-            {msg && <span className="add-msg" role="status">{msg}</span>}
-          </form>
-        </>
-      )}
-    </section>
+    <form className="add-task" onSubmit={e => { e.preventDefault(); add(); }}>
+      <label className="add-label" htmlFor="project-name-new">Project name</label>
+      <input id="project-name-new" className="add-text" placeholder="Write the name of a new project" value={name} onChange={e => setName(e.target.value)} data-testid="project-new-name" />
+      <button type="submit" className="chip-link is-accent" data-testid="project-new-add">Add project</button>
+    </form>
   );
 }
 
 export default function ProjectsPage() {
   const { values } = usePlannerStore();
-  // Show every named project plus one empty card, up to the limit.
-  let shown = 0;
-  for (let i = 0; i < PROJECT_SLOTS; i++) if (typeof values[`proj:${i}:name`] === 'string') shown = i + 1;
-  const count = Math.min(PROJECT_SLOTS, shown + 1);
+  const items = useItems();
+  const named = Array.from({ length: PROJECT_SLOTS }, (_, i) => i).filter(i => String(values[`proj:${i}:name`] ?? '').trim());
   return (
-    <PlainPage title="Projects" subtitle="A project is a bigger goal made of many tasks. Name it here, then choose it in the Project box on any task, and that task is filed here. Use the arrow on a task to bring it to the day you want to work on it." testid="projects-page">
-      <div className="project-grid">
-        {Array.from({ length: count }, (_, i) => <ProjectCard key={i} id={i} />)}
+    <PlainPage title="Projects" subtitle="A project is a bigger goal with its own list of tasks. Open one to work on just that project." testid="projects-page">
+      <AddProject />
+      <div className="project-list">
+        <Link href="/tasks" className="project-row is-tasks" data-testid="project-row-tasks">
+          <span className="pr-main"><b>Tasks</b><i>Your everyday list, written on your days and weeks</i></span>
+          <ChevronRight size={18} />
+        </Link>
+        {named.map(i => {
+          const mine = items.filter(t => t.scope === projectScope(i));
+          const open = mine.filter(t => !t.done && !t.moved).length;
+          const high = mine.filter(t => !t.done && !t.moved && t.pri === 'H').length;
+          const next = String(values[`proj:${i}:next`] ?? '');
+          return (
+            <Link key={i} href={`/projects/${i}`} className="project-row" data-testid={`project-row-${i}`}>
+              <span className="pr-main"><b>{String(values[`proj:${i}:name`])}</b><i>{next.trim() ? `Next: ${next}` : 'No next step yet'}</i></span>
+              <span className="pr-count">{open} open{high ? ` · ${high} high` : ''}</span>
+              <ChevronRight size={18} />
+            </Link>
+          );
+        })}
       </div>
-      {count >= PROJECT_SLOTS && <p className="soft-hint">That&rsquo;s all {PROJECT_SLOTS} project spaces.</p>}
+    </PlainPage>
+  );
+}
+
+type View = 'open' | 'done' | 'all';
+
+export function ProjectDetailPage({ id }: { id: string }) {
+  const n = Number(id);
+  const valid = Number.isInteger(n) && n >= 0 && n < PROJECT_SLOTS;
+  const [name, setName] = useRawField(`proj:${valid ? n : 0}:name`);
+  const [next, setNext] = useRawField(`proj:${valid ? n : 0}:next`);
+  const [notes, setNotes] = useRawField(`proj:${valid ? n : 0}:notes`);
+  const { values, setMany } = usePlannerStore();
+  const items = useItems().filter(t => t.scope === projectScope(id));
+  const [view, setView] = useState<View>('open');
+  const [text, setText] = useState('');
+  const [pri, setPri] = useState('');
+  const [msg, setMsg] = useState('');
+  const shown = items.filter(t => (view === 'open' ? !t.done && !t.moved : view === 'done' ? t.done : true));
+  const add = () => {
+    if (!text.trim()) return;
+    const plan = planAdd(values, projectScope(id), text.trim(), pri);
+    if ('error' in plan) { setMsg(plan.error); return; }
+    setMany(plan.updates); setText(''); setPri(''); setMsg('');
+  };
+  if (!valid) {
+    return <PlainPage title="Project not found" testid="project-detail"><Link href="/projects" className="inline-link">Back to all projects</Link></PlainPage>;
+  }
+  return (
+    <PlainPage title={name.trim() || 'New project'} subtitle="Just this project: its next step, notes and tasks." testid="project-detail">
+      <Link href="/projects" className="chip-link back-link" data-testid="back-to-projects"><ArrowLeft size={15} /> <span>All projects</span></Link>
+      <label className="mini-field big"><span className="mini-cap">Project name</span>
+        <input className="field-input" value={name} onChange={e => setName(e.target.value)} data-testid="project-name" />
+      </label>
+      <label className="mini-field big"><span className="mini-cap">Next step</span>
+        <input className="field-input" value={next} onChange={e => setNext(e.target.value)} data-testid="project-next" />
+      </label>
+      <label className="mini-field big"><span className="mini-cap">Notes</span>
+        <textarea className="field-textarea ruled-area project-notes" value={notes} onChange={e => setNotes(e.target.value)} />
+      </label>
+      <h2 className="group-title">Tasks in this project</h2>
+      <p className="soft-hint">Mark a task <b>High</b> priority and it will also show on your daily pages. Everything else stays here.</p>
+      <form className="add-task" onSubmit={e => { e.preventDefault(); add(); }}>
+        <input className="add-text" placeholder="Add a task to this project…" value={text} onChange={e => setText(e.target.value)} aria-label="New project task" data-testid="project-add-text" />
+        <select className="task-select" value={pri} onChange={e => setPri(e.target.value)} aria-label="Priority">
+          <option value="">Priority</option><option value="H">High</option><option value="M">Medium</option><option value="L">Low</option>
+        </select>
+        <button type="submit" className="chip-link is-accent" data-testid="project-add">Add</button>
+        {msg && <span className="add-msg" role="status">{msg}</span>}
+      </form>
+      <div className="filter-row">
+        <div className="seg" role="tablist" aria-label="Show">
+          {([['open', 'Open'], ['done', 'Done'], ['all', 'Everything']] as [View, string][]).map(([v, l]) => (
+            <button key={v} type="button" role="tab" aria-selected={view === v} className={`seg-btn ${view === v ? 'on' : ''}`} onClick={() => setView(v)} data-testid={`pview-${v}`}>{l}</button>
+          ))}
+        </div>
+      </div>
+      {shown.length === 0 ? (
+        <p className="soft-hint">{view === 'open' ? 'No open tasks yet. Add the first one above.' : 'Nothing here yet.'}</p>
+      ) : shown.map(t => <TaskRow key={t.n} item={t} meta="project" name={`pj-${id}-${t.n}`} />)}
     </PlainPage>
   );
 }

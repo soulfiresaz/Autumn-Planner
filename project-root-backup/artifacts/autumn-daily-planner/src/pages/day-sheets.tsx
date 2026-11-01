@@ -1,4 +1,4 @@
-import { useId, type ReactElement } from 'react';
+import { useId, useState, type ReactElement } from 'react';
 import { Link } from 'wouter';
 import { CheckInput, LineInput, PlainTextarea, RadioChoice, TextField } from '@/components/fields';
 import { PhotoOfDay } from '@/components/photo';
@@ -10,7 +10,7 @@ import {
 } from '@/lib/dates';
 import { useHabits } from '@/lib/habits';
 import { useField, usePlannerStore, useRawField } from '@/lib/planner-store';
-import { DAY_TASK_SLOTS, PROJECT_SLOTS, planAdd, useItems, type TaskItem } from '@/lib/tasks';
+import { DAY_TASK_SLOTS, PROJECT_SLOTS, highPriorityFor, planAdd, projectScope, useItems, useProjects, type TaskItem } from '@/lib/tasks';
 
 const range = (n: number) => Array.from({ length: n }, (_, i) => i);
 
@@ -66,24 +66,17 @@ function ListenStrip({ date }: { date: string }) {
 function FocusProjects({ date }: { date: string }) {
   const items = useItems();
   const { values } = usePlannerStore();
-  const { move } = useMover();
   const [p0, setP0] = useField('focus-proj-0');
   const [p1, setP1] = useField('focus-proj-1');
-  const today = `d:${date}`;
   const block = (id: string, set: (v: string) => void, k: number) => {
     const next = typeof values[`proj:${id}:next`] === 'string' ? (values[`proj:${id}:next`] as string) : '';
-    const open = id === '' ? [] : items.filter(i => i.proj === id && !i.done && !i.moved).slice(0, 4);
+    const high = id === '' ? [] : items.filter(i => i.scope === projectScope(id) && i.pri === 'H' && !i.done && !i.moved).slice(0, 3);
     return (
       <div className="focus-block" key={k}>
         <ProjectSelect value={id} onChange={set} label={`Project in focus ${k + 1}`} className="task-select focus-select" />
         {id !== '' && next.trim() && <div className="focus-next"><i>next step</i> {next}</div>}
-        {open.map((i, idx) => (
-          <div className={`focus-task ${idx >= 2 ? 'extra' : ''}`} key={`${i.scope}${i.prefix}${i.n}`}>
-            <span className="focus-text">{i.text}</span>
-            {i.scope !== today && (
-              <button type="button" className="mini-btn print-hide" onClick={() => move(i, today)} data-testid={`bring-${i.n}`}>Bring to today</button>
-            )}
-          </div>
+        {high.map(i => (
+          <div className="focus-task" key={`${i.scope}${i.prefix}${i.n}`}><span className="focus-text">{i.text}</span></div>
         ))}
       </div>
     );
@@ -205,28 +198,56 @@ function HoursSheet() {
 
 /* ---------- 3. Tasks & projects ---------- */
 
-function ProjectEditRow({ id }: { id: number }) {
-  const [name, setName] = useRawField(`proj:${id}:name`);
-  const [next, setNext] = useRawField(`proj:${id}:next`);
+function ProjectsPanel() {
+  const { values, setValue } = usePlannerStore();
+  const projects = useProjects();
+  const [name, setName] = useState('');
+  const full = !Array.from({ length: PROJECT_SLOTS }, (_, i) => i).some(i => !String(values[`proj:${i}:name`] ?? '').trim());
+  const add = () => {
+    const text = name.trim();
+    if (!text) return;
+    for (let i = 0; i < PROJECT_SLOTS; i++) {
+      if (!String(values[`proj:${i}:name`] ?? '').trim()) { setValue(`proj:${i}:name`, text); setName(''); return; }
+    }
+  };
   return (
-    <div className="proj-edit-row">
-      <input className="field-input" placeholder={name ? '' : 'New project name'} value={name} onChange={e => setName(e.target.value)} aria-label={`Project ${id + 1} name`} data-testid={`sheet-project-name-${id}`} />
-      {name.trim() && <input className="field-input" placeholder="Next step" value={next} onChange={e => setNext(e.target.value)} aria-label={`Next step for ${name}`} data-testid={`sheet-project-next-${id}`} />}
+    <div className="projects-panel screen-only" data-testid="projects-panel">
+      <div className="section-label"><span className="label-dot" />Your projects</div>
+      <p className="soft-hint">A <b>task</b> is one thing to do, and it lives on your day or week. A <b>project</b> is a bigger goal with its own list of tasks. Open a project to see and add its tasks. Only the ones you mark <b>High</b> priority come down to your daily pages.</p>
+      <div className="project-chips">
+        {projects.map(p => <Link key={p.id} href={`/projects/${p.id}`} className="project-chip" data-testid={`chip-project-${p.id}`}>{p.name}</Link>)}
+        {projects.length === 0 && <span className="soft-hint">No projects yet.</span>}
+      </div>
+      {!full && (
+        <form className="add-task slim" onSubmit={e => { e.preventDefault(); add(); }}>
+          <label className="add-label" htmlFor="new-project-name">Project name</label>
+          <input id="new-project-name" className="add-text" value={name} onChange={e => setName(e.target.value)} placeholder="Write the name of a new project" data-testid="sheet-project-name" />
+          <button type="submit" className="chip-link is-accent" data-testid="sheet-project-add">Add project</button>
+        </form>
+      )}
     </div>
   );
 }
 
-function ProjectsPanel() {
-  const { values } = usePlannerStore();
-  let last = -1;
-  for (let i = 0; i < PROJECT_SLOTS; i++) if (typeof values[`proj:${i}:name`] === 'string') last = i;
-  const count = Math.min(PROJECT_SLOTS, last + 2);
+function HighPriorityBox({ date }: { date: string }) {
+  const items = useItems();
+  const projects = useProjects();
+  const high = highPriorityFor(items, date);
   return (
-    <div className="projects-panel screen-only" data-testid="projects-panel">
-      <div className="section-label"><span className="label-dot" />Your projects</div>
-      <p className="soft-hint">A <b>task</b> is one thing to do. A <b>project</b> is a bigger goal made of many tasks. Name a project here, then choose it in the &ldquo;Project&rdquo; box on any task below to file that task under it.</p>
-      {Array.from({ length: count }, (_, i) => <ProjectEditRow key={i} id={i} />)}
-      <Link href="/projects" className="inline-link projects-more">Open the Projects page for notes and every task in a project</Link>
+    <div className="high-box" data-testid="high-box">
+      <div className="section-label"><span className="label-dot" />High priority &middot; from your projects and this week</div>
+      {high.length === 0 ? (
+        <p className="soft-hint print-hide">Anything you mark High in a project, or on this week&rsquo;s list, will appear here.</p>
+      ) : (
+        <div className="high-list">
+          {high.slice(0, 8).map(({ item, origin }) => (
+            <TaskRow
+              key={`${item.scope}${item.prefix}${item.n}`} item={item} origin={origin} name={`hi-${item.scope}-${item.n}`}
+              originLabel={origin === 'project' ? projects.find(p => p.id === item.scope.slice(3))?.name ?? 'project' : 'this week'}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -235,8 +256,10 @@ function TasksSheet({ date }: { date: string }) {
   return (
     <>
       <ProjectsPanel />
-      <div className="task-head" aria-hidden="true"><span /><span>Task</span><span>Priority &middot; due &middot; project</span></div>
-      {range(DAY_TASK_SLOTS).map(n => <TaskRow key={n} meta item={{ scope: `d:${date}`, prefix: 't', n }} />)}
+      <HighPriorityBox date={date} />
+      <div className="section-label tasks-label"><span className="label-dot" />Today&rsquo;s tasks</div>
+      <div className="task-head" aria-hidden="true"><span /><span>Task</span><span>Priority</span></div>
+      {range(DAY_TASK_SLOTS).map(n => <TaskRow key={n} meta="day" item={{ scope: `d:${date}`, prefix: 't', n }} />)}
       <div className="two-column task-notes">
         <TextField name="proj-notes" label="Project notes · next steps" rows={3} ruled />
         <TextField name="waiting" label="Waiting on · follow up later" rows={3} ruled />

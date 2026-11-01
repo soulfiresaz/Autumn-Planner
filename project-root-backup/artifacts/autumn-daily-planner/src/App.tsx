@@ -10,7 +10,7 @@ import { addDays, clampToRange, isValidISO, isValidMonth, monthOf, todayISO } fr
 import { lastBackup } from '@/lib/backup';
 import { PlannerProvider, usePlannerStore } from '@/lib/planner-store';
 import BackupPage from '@/pages/backup-page';
-import ProjectsPage from '@/pages/projects-page';
+import ProjectsPage, { ProjectDetailPage } from '@/pages/projects-page';
 import SearchPage from '@/pages/search-page';
 import TasksPage from '@/pages/tasks-page';
 import DayPage from '@/pages/day-page';
@@ -98,6 +98,7 @@ function Routes() {
       </Route>
       <Route path="/tasks" component={TasksPage} />
       <Route path="/projects" component={ProjectsPage} />
+      <Route path="/projects/:id">{params => <ProjectDetailPage id={params.id} />}</Route>
       <Route path="/search" component={SearchPage} />
       <Route path="/backup" component={BackupPage} />
       <Route path="/week/:ws/:sheet?">

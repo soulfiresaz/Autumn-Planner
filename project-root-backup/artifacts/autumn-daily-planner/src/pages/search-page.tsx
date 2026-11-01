@@ -32,7 +32,7 @@ export default function SearchPage() {
       if (!v.toLowerCase().includes(needle)) continue;
       const loc = locate(key);
       if (!loc) continue;
-      const when = kind === 'd' ? fmtLong(id) : kind === 'w' ? `Week of ${weekRangeLabel(id)}` : kind === 'm' ? id : 'Project';
+      const when = kind === 'd' ? fmtLong(id) : kind === 'w' ? `Week of ${weekRangeLabel(id)}` : kind === 'm' ? id : kind === 'pj' ? 'Project task' : 'Project';
       out.push({ key, text: v, href: loc.href, when, where: loc.where });
       if (out.length >= 80) break;
     }

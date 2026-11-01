@@ -1,14 +1,17 @@
 import { useMemo } from 'react';
-import { addDays, fromISO, inRange, isValidISO, weekStart } from '@/lib/dates';
+import { addDays, fromISO, inRange, isValidISO, todayISO, weekStart } from '@/lib/dates';
 import { usePlannerStore, type Values } from '@/lib/planner-store';
 
-/** A task or priority lives in one day (d:DATE) or in one week's own list (w:SUNDAY). */
+/** A task lives in one day (d:DATE), one week's own list (w:SUNDAY), or one project's list (pj:ID). */
 export type ItemRef = { scope: string; prefix: 't' | 'p'; n: number };
 
 export const DAY_TASK_SLOTS = 14;
 export const WEEK_TASK_SLOTS = 12;
 export const PROJECT_SLOTS = 8;
-export const slotsFor = (scope: string) => (scope.startsWith('w:') ? WEEK_TASK_SLOTS : DAY_TASK_SLOTS);
+export const PROJECT_TASK_SLOTS = 40;
+export const slotsFor = (scope: string) => (scope.startsWith('pj:') ? PROJECT_TASK_SLOTS : scope.startsWith('w:') ? WEEK_TASK_SLOTS : DAY_TASK_SLOTS);
+export const isProjectScope = (scope: string) => scope.startsWith('pj:');
+export const projectScope = (id: string | number) => `pj:${id}`;
 
 export const keyOf = (ref: ItemRef, field: string) => `${ref.scope}:${ref.prefix}-${ref.n}-${field}`;
 export const refId = (ref: ItemRef) => `${ref.scope}:${ref.prefix}-${ref.n}`;
@@ -17,7 +20,7 @@ export type TaskItem = ItemRef & {
   text: string; done: boolean; pri: string; due: string; proj: string; moved: string; movedSlot: string;
 };
 
-const ITEM_RE = /^([dw]:[^:]+):([tp])-(\d+)-text$/;
+const ITEM_RE = /^((?:d|w|pj):[^:]+):([tp])-(\d+)-text$/;
 const str = (v: string | boolean | undefined) => (typeof v === 'string' ? v : '');
 
 export function readItem(values: Values, ref: ItemRef): TaskItem {
@@ -39,6 +42,7 @@ export function allItems(values: Values): TaskItem[] {
   }
   // Days first by date, a week's own list before that week's days; priorities before tasks.
   const sortKey = (i: TaskItem) => {
+    if (isProjectScope(i.scope)) return `~${i.scope}|${i.prefix}|${String(i.n).padStart(3, '0')}`;
     const id = i.scope.slice(2);
     return `${i.scope.startsWith('w:') ? id : weekStart(id)}|${i.scope.startsWith('w:') ? '0' : '1'}${id}|${i.prefix === 'p' ? 0 : 1}|${String(i.n).padStart(3, '0')}`;
   };
@@ -60,21 +64,29 @@ export function freeSlot(values: Values, scope: string): number {
 }
 
 export function scopeDate(scope: string): string {
-  return scope.slice(2);
+  return isProjectScope(scope) ? scope.slice(3) : scope.slice(2);
 }
 
 export function isValidScope(scope: string): boolean {
   if (scope.startsWith('d:')) return isValidISO(scope.slice(2)) && inRange(scope.slice(2));
+  if (isProjectScope(scope)) return /^[0-7]$/.test(scope.slice(3));
   if (scope.startsWith('w:')) return isValidISO(scope.slice(2)) && weekStart(scope.slice(2)) === scope.slice(2);
   return false;
 }
 
 /** Where a task could go from here. */
-export function moveChoices(from: string) {
-  const dateOf = scopeDate(from);
-  const isDay = from.startsWith('d:');
+export function moveChoices(from: string, projects: { id: string; name: string }[] = []) {
   const choices: { id: string; label: string; scope: string }[] = [];
-  if (isDay) {
+  if (isProjectScope(from)) {
+    const today = todayISO();
+    if (inRange(today)) choices.push({ id: 'today', label: 'Today', scope: `d:${today}` });
+    const tomorrow = addDays(today, 1);
+    if (inRange(tomorrow)) choices.push({ id: 'tomorrow', label: 'Tomorrow', scope: `d:${tomorrow}` });
+    if (inRange(today)) choices.push({ id: 'thisweek', label: "This week's list", scope: `w:${weekStart(today)}` });
+    return choices;
+  }
+  const dateOf = scopeDate(from);
+  if (from.startsWith('d:')) {
     const tomorrow = addDays(dateOf, 1);
     if (inRange(tomorrow)) choices.push({ id: 'tomorrow', label: 'Tomorrow', scope: `d:${tomorrow}` });
     const nextWeek = addDays(dateOf, 7);
@@ -84,23 +96,24 @@ export function moveChoices(from: string) {
     const nextWs = addDays(dateOf, 7);
     if (inRange(nextWs)) choices.push({ id: 'nextweek', label: "Next week's list", scope: `w:${nextWs}` });
   }
+  for (const p of projects) choices.push({ id: `project-${p.id}`, label: `Send to project: ${p.name}`, scope: projectScope(p.id) });
   return choices;
 }
 
-/** Copy an item to another day / week and mark the original as moved. Returns an error message, or null. */
+/** Copy an item to another day / week / project and mark the original as moved. Returns an error message, or null. */
 export function planMove(values: Values, item: ItemRef, toScope: string): { updates: Values } | { error: string } {
   if (!isValidScope(toScope)) return { error: 'That date is outside the planner.' };
   if (toScope === item.scope) return { error: 'It is already there.' };
   const slot = freeSlot(values, toScope);
-  if (slot < 0) return { error: 'That list is full. Make room there first, or pick another day.' };
+  if (slot < 0) return { error: 'That list is full. Make room there first, or pick another place.' };
   const from = readItem(values, item);
   const base = `${toScope}:t-${slot}-`;
+  const keepDue = item.scope.startsWith('w:') && toScope.startsWith('w:');
   return {
     updates: {
       [base + 'text']: from.text,
       [base + 'pri']: from.pri,
-      [base + 'due']: from.due,
-      [base + 'proj']: from.proj,
+      [base + 'due']: keepDue ? from.due : '',
       [keyOf(item, 'moved')]: toScope,
       [keyOf(item, 'mslot')]: String(slot),
       [keyOf(item, 'done')]: false,
@@ -114,27 +127,37 @@ export function planUndo(values: Values, item: ItemRef): Values {
   if (from.moved && from.movedSlot !== '') {
     const copy = readItem(values, { scope: from.moved, prefix: 't', n: Number(from.movedSlot) });
     if (copy.text === from.text) {
-      for (const f of ['text', 'pri', 'due', 'proj', 'done', 'moved', 'mslot']) updates[keyOf(copy, f)] = '';
+      for (const f of ['text', 'pri', 'due', 'proj', 'done', 'doneon', 'moved', 'mslot']) updates[keyOf(copy, f)] = '';
     }
   }
   return updates;
-}
-
-export function scopeLabel(scope: string, fmtDay: (iso: string) => string, fmtWeek: (ws: string) => string) {
-  return scope.startsWith('d:') ? fmtDay(scopeDate(scope)) : `${fmtWeek(scopeDate(scope))} (week list)`;
 }
 
 export function scopeDateSafe(scope: string) {
   return fromISO(scopeDate(scope));
 }
 
-/** Add a task to a day or week's list. */
-export function planAdd(values: Values, scope: string, text: string, proj = ''): { updates: Values } | { error: string } {
+/** Add a task to a day, a week's list, or a project's list. */
+export function planAdd(values: Values, scope: string, text: string, pri = ''): { updates: Values } | { error: string } {
   if (!isValidScope(scope)) return { error: 'That date is outside the planner.' };
   const slot = freeSlot(values, scope);
-  if (slot < 0) return { error: 'That list is full. Pick another day.' };
+  if (slot < 0) return { error: 'That list is full. Pick another place.' };
   const base = `${scope}:t-${slot}-`;
-  return { updates: { [base + 'text']: text, [base + 'proj']: proj } };
+  return { updates: { [base + 'text']: text, [base + 'pri']: pri } };
+}
+
+export type Surfaced = { item: TaskItem; origin: 'project' | 'week' };
+
+/** What flows down onto a day's page: only high-priority things, from projects and from that week's list. */
+export function highPriorityFor(items: TaskItem[], date: string): Surfaced[] {
+  const ws = weekStart(date);
+  const out: Surfaced[] = [];
+  for (const item of items) {
+    if (item.pri !== 'H' || item.done || item.moved) continue;
+    if (isProjectScope(item.scope)) out.push({ item, origin: 'project' });
+    else if (item.scope === `w:${ws}` && (item.due === '' || item.due === date)) out.push({ item, origin: 'week' });
+  }
+  return out;
 }
 
 export type Project = { id: string; name: string };
