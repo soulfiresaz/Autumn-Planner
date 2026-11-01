@@ -8,6 +8,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { addDays, clampToRange, isValidISO, isValidMonth, monthOf, todayISO } from '@/lib/dates';
 import { lastBackup } from '@/lib/backup';
+import { LevelSwitch, PhoneHeader, useRememberWeek, useSwipePages } from '@/components/phone-chrome';
 import { PlannerProvider, usePlannerStore } from '@/lib/planner-store';
 import BackupPage from '@/pages/backup-page';
 import ProjectsPage, { ProjectDetailPage } from '@/pages/projects-page';
@@ -54,12 +55,16 @@ function calendarHref(location: string) {
 
 function Shell({ children }: { children: ReactNode }) {
   const { savedState } = usePlannerStore();
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
+  useRememberWeek();
+  useSwipePages(setLocation);
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location]);
   return (
     <div className="planner-app">
+      <PhoneHeader />
+      <LevelSwitch />
       <header className="topbar">
         <Link href="/" className="brand-lockup" aria-label="Autumn Planner, back to the calendar" data-testid="link-home">
           <div className="brand-mark" aria-hidden="true"><Leaf size={19} strokeWidth={1.5} /></div>

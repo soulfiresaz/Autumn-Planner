@@ -796,3 +796,64 @@ a.day-letter:hover { background: #fffaf0; color: var(--rust); transform: transla
   .print-all .task-row { gap: 0 8px; padding: 0; }
   .print-all .check-input { width: 15px; height: 15px; }
 }
+
+/* =====================================================================
+   v4: the phone planner
+   ===================================================================== */
+.phone-only { display: none; }
+.phone-header, .level-switch { display: none; }
+@media print { .phone-header, .level-switch { display: none !important; } }
+@media (max-width: 760px) {
+  .phone-only.phone-header { display: flex; }
+  .phone-only.level-switch { display: flex; }
+  .topbar, .app-nav, .backup-nudge, .week-strip, .context-wrap:has(.day-bar) { display: none !important; }
+  .context-actions .print-button, .context-actions .chip-link { display: none !important; }
+  .phone-header {
+    position: sticky; top: 0; z-index: 40; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 8px 12px; min-height: 56px; background: rgba(244, 238, 224, .96); backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(196, 177, 150, .5);
+  }
+  .menu-btn { position: relative; width: 46px; height: 46px; display: grid; place-items: center; border-radius: 14px; border: 1px solid #cbb99e; background: rgba(250, 247, 237, .8); color: #49392e; cursor: pointer; }
+  .menu-dot { position: absolute; top: 8px; right: 8px; width: 9px; height: 9px; border-radius: 50%; background: #a85839; border: 2px solid #f6efe0; }
+  .phone-brand { font-family: var(--app-font-serif); font-size: 21px; color: #49392e; text-decoration: none; letter-spacing: -.01em; flex: 1; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .today-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border-radius: 999px; background: #a85839; color: #fff8eb; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; }
+  .level-switch { gap: 4px; margin: 10px 12px 12px; padding: 4px; border: 1px solid rgba(196, 177, 150, .7); background: rgba(247, 242, 229, .7); border-radius: 14px; }
+  .level-btn { flex: 1; min-height: 44px; display: grid; place-items: center; border-radius: 10px; text-decoration: none; color: #746657; font-size: 15px; font-weight: 600; }
+  .level-btn.on { background: #a85839; color: #fff8eb; box-shadow: 0 3px 8px rgba(132, 69, 43, .16); }
+  .phone-menu { min-width: 250px; padding: 8px; border-radius: 16px; background: #fffaf0; border: 1px solid #d3c4aa; box-shadow: 0 14px 34px rgba(81, 63, 43, .18); }
+  .phone-menu-item { min-height: 50px; padding: 0 14px; gap: 14px; font-size: 16px; color: #493a30; border-radius: 10px; display: flex; align-items: center; }
+  .phone-menu-item a { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 50px; text-decoration: none; color: inherit; }
+  .context-wrap { margin-top: 0; }
+
+  /* big, thumb-sized controls */
+  .check-input { width: 30px; height: 30px; border-radius: 8px; border-width: 1.5px; }
+  .check-input:checked::after { width: 14px; height: 7px; border-left-width: 2.2px; border-bottom-width: 2.2px; }
+  .task-row, .task-row.has-meta { grid-template-columns: 38px minmax(0, 1fr) auto; min-height: 56px; }
+  .task-text { height: 46px; font-size: 16px; }
+  .check-row { grid-template-columns: 38px 1fr; min-height: 56px; }
+  .habit-chip { grid-template-columns: 38px 1fr; min-height: 52px; font-size: 15px; }
+  .habit-chips { grid-template-columns: 1fr; }
+  .habit-table .habit-check { width: 26px; height: 26px; }
+  .move-btn { width: 46px; height: 46px; }
+  .undo-btn { width: 40px; height: 40px; }
+  .mood-choice { width: 26px; height: 26px; }
+  .water-check { height: 38px; }
+  .mini-btn { min-height: 40px; padding: 8px 14px; font-size: 13px; }
+  .task-select, .add-date { min-height: 44px; font-size: 15px; }
+  .task-meta .pri, .task-meta .due-select { min-height: 44px; }
+  .row-input, .field-input { font-size: 16px; }
+  .write-row { min-height: 52px; }
+  .move-choice { min-height: 48px; font-size: 15px; }
+  .move-pop { width: min(300px, calc(100vw - 24px)); }
+  .seg-btn { min-height: 44px; padding: 8px 14px; }
+
+  /* the calendar: just big numbers */
+  .cal-table { border-spacing: 4px; }
+  .cal-day { min-height: 60px; border-radius: 12px; }
+  .cal-num { font-size: 23px; }
+  .cal-wk-head, .cal-wk { width: 46px; }
+  .cal-wk-link { width: 40px; height: 40px; font-size: 16px; }
+  .cal-hint { font-size: 12px; }
+}
+html, body { overscroll-behavior-x: none; }
+.listen-book { gap: .4em; flex-wrap: wrap; }

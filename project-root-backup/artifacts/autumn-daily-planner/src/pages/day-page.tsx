@@ -57,7 +57,7 @@ export default function DayPage({ date, sheet }: { date: string; sheet?: string 
   const next = date < RANGE_END ? addDays(date, 1) : undefined;
 
   const bar = (
-    <div className="context-bar">
+    <div className="context-bar day-bar">
       <div className="context-left">
         <Link href={`/week/${ws}`} className="chip-link" data-testid="link-week">
           <CalendarRange size={15} strokeWidth={1.7} /> <span>Week {weekNumber(ws)}</span>
