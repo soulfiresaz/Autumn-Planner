@@ -9,7 +9,7 @@ import {
   addDays, fmtLong, fmtMonthDayShort, fmtWeekday, fromISO, weekNumber, weekStart,
 } from '@/lib/dates';
 import { useHabits } from '@/lib/habits';
-import { useField, usePlannerStore, useRawField, useScopeName } from '@/lib/planner-store';
+import { useField, usePlannerStore, useRawField, useScopeName, useToggle } from '@/lib/planner-store';
 import { DAY_TASK_SLOTS, PROJECT_SLOTS, highPriorityFor, planAdd, projectScope, useItems, useProjects, type TaskItem } from '@/lib/tasks';
 
 const range = (n: number) => Array.from({ length: n }, (_, i) => i);
@@ -270,53 +270,44 @@ function TasksSheet({ date }: { date: string }) {
 
 /* ---------- 4. Nourish ---------- */
 
-function WaterSize() {
-  const [size, setSize] = useField('oz-size');
-  const [unit, setUnit] = useField('oz-unit');
+function Glass({ index }: { index: number }) {
+  const [on, setOn] = useToggle(`glass-${index}`);
   return (
-    <div className="water-size">
-      <span>Each one is</span>
-      <input
-        className="water-size-input" inputMode="decimal" maxLength={6} value={size}
-        aria-label="Size of each glass or bottle" data-testid="oz-size"
-        onChange={e => setSize(e.target.value)}
-      />
-      <select className="water-unit" value={unit || 'oz'} aria-label="Unit" data-testid="oz-unit" onChange={e => setUnit(e.target.value)}>
-        <option value="oz">ounces</option>
-        <option value="ml">milliliters</option>
-      </select>
-    </div>
-  );
-}
-
-function OunceBox({ index }: { index: number }) {
-  const [value, setValue] = useField(`oz-${index}`);
-  return (
-    <label className={`oz-bottle ${value.trim() ? 'has-value' : ''}`}>
-      <input
-        className="oz-input" inputMode="decimal" value={value} maxLength={8}
-        aria-label={`Ounces in glass ${index + 1}`} data-testid={`oz-${index}`}
-        onChange={e => setValue(e.target.value)}
-      />
-    </label>
+    <button
+      type="button" className={`oz-bottle glass ${on ? 'has-value' : ''}`} aria-pressed={on}
+      aria-label={`Glass ${index + 1}`} data-testid={`glass-${index}`} onClick={() => setOn(!on)}
+    ><span className="oz-input" /></button>
   );
 }
 
 function WaterGrid() {
   const { values } = usePlannerStore();
   const scope = useScopeName();
-  let total = 0;
-  for (let i = 0; i < 24; i++) {
-    const v = values[`${scope}:oz-${i}`];
-    const n = typeof v === 'string' ? parseFloat(v.replace(/[^0-9.]/g, '')) : NaN;
-    if (Number.isFinite(n)) total += n;
-  }
-  const unit = values[`${scope}:oz-unit`] === 'ml' ? 'ml' : 'oz';
+  const [size, setSize] = useField('oz-size');
+  const [unit, setUnit] = useField('oz-unit');
+  const u = unit === 'ml' ? 'ml' : 'oz';
+  let glasses = 0;
+  for (let i = 0; i < 24; i++) if (values[`${scope}:glass-${i}`] === true) glasses++;
+  const each = parseFloat(size.replace(/[^0-9.]/g, ''));
+  const total = Number.isFinite(each) ? Math.round(each * glasses * 10) / 10 : 0;
   return (
     <>
-      <WaterSize />
-      <div className="water-grid">{range(24).map(i => <OunceBox key={i} index={i} />)}</div>
-      <div className="water-total" data-testid="water-total">Total: <b>{Math.round(total * 10) / 10}</b> {unit}</div>
+      <div className="water-size">
+        <span>Each one is</span>
+        <input
+          className="water-size-input" inputMode="decimal" maxLength={6} value={size}
+          aria-label="Size of each glass or bottle" data-testid="oz-size"
+          onChange={e => setSize(e.target.value)}
+        />
+        <select className="water-unit" value={u} aria-label="Unit" data-testid="oz-unit" onChange={e => setUnit(e.target.value)}>
+          <option value="oz">ounces</option>
+          <option value="ml">milliliters</option>
+        </select>
+        <span className="water-sum" data-testid="water-total">
+          &times; {glasses} {glasses === 1 ? 'glass' : 'glasses'} = <b>{total}</b> {u}
+        </span>
+      </div>
+      <div className="water-grid">{range(24).map(i => <Glass key={i} index={i} />)}</div>
     </>
   );
 }

@@ -875,3 +875,16 @@ html, body { overscroll-behavior-x: none; }
 .water-size-input:focus { border-bottom-color: #a85839; }
 .water-unit { height: 34px; font-size: 14px; color: #3f4a31; border: 1px solid #9fa98b; border-radius: 8px; background: rgba(168,174,144,.08); padding: 0 6px; }
 @media (max-width: 760px) { .water-size-input, .water-unit { height: 40px; font-size: 16px; } }
+
+.oz-bottle.glass { border: 0; background: none; padding: 0; cursor: pointer; }
+.oz-bottle.glass .oz-input { display: block; }
+.oz-bottle.glass:focus-visible .oz-input { border-color: #a85839; box-shadow: 0 0 0 2px rgba(168,88,57,.25); }
+.water-sum { margin-left: auto; font-size: 13px; color: #6d5b4c; }
+.water-sum b { font-family: var(--app-font-serif); font-weight: 400; font-size: 20px; color: #49392e; }
+@media (max-width: 760px) {
+  .water-size { flex-wrap: nowrap; gap: 5px; font-size: 13px; }
+  .water-size-input { width: 40px; font-size: 16px; }
+  .water-unit { font-size: 13px; padding: 0 2px; max-width: 98px; }
+  .water-sum { margin-left: 0; font-size: 12px; white-space: nowrap; }
+  .water-sum b { font-size: 17px; }
+}
