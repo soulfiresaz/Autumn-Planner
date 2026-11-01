@@ -1,4 +1,5 @@
 import { Check, X } from 'lucide-react';
+import { ColorField } from '@/components/color-field';
 import { TEXT_SIZES, DARK_PRESETS, clampDark, BG_PRESETS, DEFAULT_BG, DEFAULT_NAME, MAX_SAVED, PRESETS, softMatches, useSettings } from '@/lib/settings';
 import { PlainPage } from './plain-page';
 
@@ -63,7 +64,7 @@ export default function SettingsPage() {
         </div>
         <div className="accent-row">
           <label className="color-pick">
-            <input type="color" value={darkBase} onChange={e => setDark(e.target.value)} aria-label="Pick any dark color" data-testid="dark-input" />
+            <ColorField value={darkBase} onCommit={setDark} label="Pick any dark color" testid="dark-input" />
             <span>Pick any color</span>
           </label>
           <code className="hex">{darkBase}</code>
@@ -81,7 +82,7 @@ export default function SettingsPage() {
         <p className="soft-hint">This colors the buttons, today's date, highlighted tabs and small bits of writing.</p>
         <div className="accent-row">
           <label className="color-pick">
-            <input type="color" value={accent} onChange={e => setAccent(e.target.value)} aria-label="Pick any color" data-testid="accent-input" />
+            <ColorField value={accent} onCommit={setAccent} label="Pick any color" testid="accent-input" />
             <span>Pick any color</span>
           </label>
           <code className="hex">{accent}</code>
@@ -110,7 +111,7 @@ export default function SettingsPage() {
         </div>
         <div className="accent-row">
           <label className="color-pick">
-            <input type="color" value={bg} onChange={e => setBg(e.target.value)} aria-label="Pick any background color" data-testid="bg-input" />
+            <ColorField value={bg} onCommit={setBg} label="Pick any background color" testid="bg-input" />
             <span>Pick any color</span>
           </label>
           <code className="hex">{bg}</code>
