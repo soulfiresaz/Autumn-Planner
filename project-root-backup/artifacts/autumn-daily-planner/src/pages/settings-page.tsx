@@ -1,4 +1,5 @@
 import { Check, X } from 'lucide-react';
+import { ColorGuide } from '@/components/color-guide';
 import { ColorField } from '@/components/color-field';
 import { TEXT_SIZES, DARK_PRESETS, clampDark, BG_PRESETS, DEFAULT_BG, DEFAULT_NAME, MAX_SAVED, PRESETS, softMatches, useSettings } from '@/lib/settings';
 import { PlainPage } from './plain-page';
@@ -38,6 +39,12 @@ export default function SettingsPage() {
       <section className="settings-block">
         <h2 className="settings-h">Planner name</h2>
         <input className="search-box" value={nameRaw} placeholder={DEFAULT_NAME} maxLength={40} aria-label="Planner name" data-testid="setting-name" onChange={e => setName(e.target.value)} />
+      </section>
+
+      <section className="settings-block guide-block">
+        <h2 className="settings-h">How the colors fit together</h2>
+        <p className="soft-hint">Each layer has a number. These are the real colors you are using right now.</p>
+        <ColorGuide watch={`${accent}|${bg}|${theme}|${darkBase}|${textSize}`} />
       </section>
 
       <section className="settings-block">

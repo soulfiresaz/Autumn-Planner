@@ -1187,3 +1187,20 @@ a.day-letter.is-today:hover, a.day-letter.is-today { background: var(--rust); bo
   .begin-top { margin-top: 0; }
   .brain-panel .brain-label { margin-top: 0; }
 }
+
+/* Color guide */
+.guide-block { max-width: 720px; }
+.color-guide { display: grid; gap: 18px; margin-top: 10px; }
+.guide-bg { background: var(--page-bg, #f1ecdf); border: 1px solid var(--c-cbb99e); border-radius: 18px; padding: 12px; }
+.guide-page { background: var(--paper); border: 1px solid var(--paper-edge); border-radius: 12px; padding: 12px; display: grid; gap: 10px; }
+.guide-panel { background: color-mix(in srgb, var(--c-493a30) 5%, transparent); border: 1px solid color-mix(in srgb, var(--c-493a30) 12%, transparent); border-radius: 12px; padding: 10px 12px; display: grid; gap: 6px; }
+.guide-card { background: color-mix(in srgb, var(--c-e0e6ce) 35%, transparent); border: 1px solid var(--c-cfd5b7); border-radius: 12px; padding: 10px 12px; }
+.guide-cap { font-size: calc(11px * var(--text-scale, 1)); letter-spacing: .1em; text-transform: uppercase; font-weight: 700; color: var(--c-6d5b4c); display: block; }
+.guide-ink { font-family: var(--app-font-serif); font-size: calc(20px * var(--text-scale, 1)); color: var(--c-493a30); }
+.guide-accent { justify-self: start; background: var(--rust); color: var(--on-rust); border-radius: 999px; padding: 8px 16px; font-size: calc(12.5px * var(--text-scale, 1)); font-weight: 700; }
+.guide-tags { display: grid; gap: 12px; }
+.guide-tag { display: flex; gap: 12px; align-items: flex-start; }
+.guide-tag p { margin: 2px 0 0; font-size: calc(14px * var(--text-scale, 1)); line-height: 1.5; color: var(--c-6d5b4c); }
+.guide-tag b { font-size: calc(15px * var(--text-scale, 1)); margin-right: 8px; }
+.guide-tag code { font-size: calc(13px * var(--text-scale, 1)); color: var(--c-6d5b4c); }
+.guide-num { flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--rust); color: var(--on-rust); display: grid; place-items: center; font-size: 13px; font-weight: 700; }
