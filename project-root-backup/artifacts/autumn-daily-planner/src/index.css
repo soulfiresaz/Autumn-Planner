@@ -104,7 +104,7 @@
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.86' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E");
 }
 .topbar {
-  max-width: 1220px;
+  max-width: 1038px;
   padding: 24px 34px 18px;
   margin: 0 auto;
   display: flex;
@@ -114,7 +114,7 @@
   position: relative;
   z-index: 2;
 }
-.brand-lockup { display: flex; align-items: center; gap: 13px; min-width: 220px; }
+.brand-lockup { display: flex; align-items: center; gap: 13px; min-width: 220px; text-decoration: none; color: inherit; }
 .brand-mark {
   width: 40px; height: 40px; border-radius: 50% 50% 48% 12%;
   border: 1px solid #b97858; transform: rotate(-35deg);
@@ -133,10 +133,10 @@
   transition: background .2s, transform .2s;
 }
 .print-button:hover { background: #fffaf0; transform: translateY(-1px); }
-.print-button:focus-visible, .nav-link:focus-visible, input:focus-visible, textarea:focus-visible, .mood-choice:focus-visible {
+.print-button:focus-visible, .chip-link:focus-visible, .step-btn:focus-visible, .month-tab:focus-visible, .cal-day:focus-visible, .cal-wk-link:focus-visible, .ws-day:focus-visible, .week-day-link:focus-visible, .brand-lockup:focus-visible, .nav-link:focus-visible, input:focus-visible, textarea:focus-visible, .mood-choice:focus-visible {
   outline: 3px solid rgba(168, 88, 57, .42); outline-offset: 3px;
 }
-.nav-wrap { max-width: 1220px; padding: 0 34px; margin: 0 auto 25px; position: relative; z-index: 2; }
+.nav-wrap { max-width: 1038px; padding: 0 34px; margin: 0 auto 22px; position: relative; z-index: 2; }
 .page-nav {
   display: flex; gap: 5px; padding: 6px; overflow-x: auto; scrollbar-width: thin;
   border: 1px solid rgba(196, 177, 150, .7); background: rgba(247, 242, 229, .66);
@@ -233,7 +233,6 @@
 .reflection-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 30px; }
 .signature { font-family: 'La Belle Aurore', cursive; color: #9e765d; font-size: 22px; transform: rotate(-3deg); }
 .sheet-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #ded2bf; padding-top: 15px; margin-top: 23px; color: #988874; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
-.mobile-page-indicator { display: none; }
 .print-all { display: none; }
 @keyframes sheet-arrive { from { opacity: .65; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -243,7 +242,7 @@
   .brand-name { font-size: 22px; }
   .brand-caption { font-size: 8px; letter-spacing: .12em; }
   .brand-mark { width: 34px; height: 34px; }
-  .saved-state { display: none; }
+  .saved-state { font-size: 11px; min-width: 0; }
   .print-button { padding: 9px 12px; font-size: 11px; }
   .nav-wrap { padding: 0 13px; margin-bottom: 17px; }
   .page-nav { gap: 3px; padding: 5px; border-radius: 12px; }
@@ -269,11 +268,166 @@
   .sheet-footer { margin-top: 28px; }
 }
 
+/* ---------- calendar planner: navigation ---------- */
+.context-wrap { max-width: 1038px; margin: 0 auto 16px; padding: 0 34px; position: relative; z-index: 2; }
+.context-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px 12px; flex-wrap: wrap; }
+.context-left, .context-actions { display: flex; align-items: center; gap: 8px; }
+.chip-link {
+  display: inline-flex; align-items: center; gap: 7px; padding: 9px 14px; min-height: 40px;
+  border: 1px solid #cbb99e; border-radius: 999px; background: rgba(250,247,237,.62);
+  font-size: 12px; font-weight: 600; color: #624e40; text-decoration: none; cursor: pointer;
+  transition: background .2s, transform .2s;
+}
+.chip-link:hover { background: #fffaf0; transform: translateY(-1px); }
+.chip-link.is-accent { background: #a85839; color: #fff8eb; border-color: #a85839; }
+.chip-link.is-accent:hover { background: #99502f; }
+.print-button { min-height: 40px; }
+.step-links { display: flex; align-items: center; gap: 8px; }
+.step-btn {
+  width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%;
+  border: 1px solid #cbb99e; background: rgba(250,247,237,.62); color: #624e40; text-decoration: none;
+}
+a.step-btn:hover { background: #fffaf0; color: var(--rust); }
+.step-btn.is-disabled { opacity: .32; }
+.step-label { font-family: var(--app-font-serif); font-size: 19px; min-width: 84px; text-align: center; color: #49392e; }
+.step-of { font-family: var(--app-font-sans); font-size: 11px; color: #85755f; letter-spacing: .04em; }
+.month-tabs {
+  display: flex; gap: 4px; padding: 5px; border: 1px solid rgba(196,177,150,.7);
+  background: rgba(247,242,229,.66); border-radius: 15px; box-shadow: 0 5px 16px rgba(81,63,43,.04);
+}
+.month-tab { display: flex; align-items: baseline; gap: 6px; padding: 9px 17px; min-height: 40px; align-items: center; border-radius: 10px; text-decoration: none; color: #746657; font-size: 13px; transition: .18s ease; }
+.month-tab:hover { color: var(--rust); background: rgba(255,255,255,.45); }
+.month-tab.active { background: #a85839; color: #fff8eb; box-shadow: 0 3px 8px rgba(132,69,43,.16); }
+.mt-short { display: none; }
+.mt-year { font-size: 11px; opacity: .72; }
+.week-strip {
+  width: min(970px, calc(100% - 68px)); margin: 0 auto 14px; display: grid;
+  grid-template-columns: 36px repeat(7, 1fr) 36px; gap: 6px; position: relative; z-index: 2;
+}
+.ws-day {
+  display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 7px 0 6px;
+  border: 1px solid #d9ccb6; border-radius: 12px; background: rgba(250,247,237,.55);
+  text-decoration: none; color: #6d5d4e; transition: .18s ease;
+}
+a.ws-day:hover { background: #fffaf0; border-color: #c9a47f; }
+.ws-letter { font-size: 10px; letter-spacing: .12em; font-weight: 600; }
+.ws-num { font-family: var(--app-font-serif); font-size: 20px; line-height: 1.1; }
+.ws-dot { width: 5px; height: 5px; border-radius: 50%; background: transparent; margin-top: 1px; }
+.ws-day.has-entries .ws-dot { background: #a85839; }
+.ws-day.is-today:not(.is-current) { border-color: #a85839; box-shadow: inset 0 0 0 1px #a85839; }
+.ws-day.is-current { background: #a85839; border-color: #a85839; color: #fff8eb; }
+.ws-day.is-current.has-entries .ws-dot { background: #fff8eb; }
+.ws-day.is-outside { opacity: .38; }
+.ws-step { display: grid; place-items: center; border-radius: 12px; color: #624e40; text-decoration: none; border: 1px solid #d9ccb6; background: rgba(250,247,237,.55); }
+a.ws-step:hover { background: #fffaf0; color: var(--rust); }
+.ws-step.is-disabled { opacity: .3; }
+
+/* ---------- calendar planner: month sheet ---------- */
+.cal-table { width: 100%; border-collapse: separate; border-spacing: 5px; table-layout: fixed; margin: -5px; width: calc(100% + 10px); }
+.cal-table th { color: #7a6b59; font-size: 10px; letter-spacing: .13em; text-transform: uppercase; font-weight: 700; padding: 0 0 6px; }
+.cal-wk-head, .cal-wk { width: 50px; }
+.cal-wk { padding: 0; }
+.cal-wk-link {
+  display: flex; align-items: center; justify-content: center; gap: 3px; height: 32px; width: 44px; margin: auto;
+  border: 1px solid #d6c8af; border-radius: 999px; font-family: var(--app-font-serif); font-size: 15px;
+  color: #6f5f50; text-decoration: none; background: rgba(250,247,237,.5);
+}
+.cal-wk-link::before { content: 'wk'; font-family: var(--app-font-sans); font-size: 8px; letter-spacing: .08em; text-transform: uppercase; color: #8a7a68; }
+.cal-wk-link:hover { background: #fffaf0; border-color: #c9a47f; color: var(--rust); }
+.cal-wk-link.has-entries { border-color: #b97858; }
+.cal-cell { padding: 0; }
+.cal-day {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 64px;
+  border: 1px solid #e0d4bf; border-radius: 12px; background: rgba(255,255,255,.3); text-decoration: none; color: #493a30; transition: .16s ease;
+}
+.cal-day:hover { background: #fffaf0; border-color: #c9a47f; transform: translateY(-1px); }
+.cal-num { font-family: var(--app-font-serif); font-size: 22px; line-height: 1; }
+.cal-dot { width: 5px; height: 5px; border-radius: 50%; background: transparent; }
+.cal-day.has-entries .cal-dot { background: #a85839; }
+.cal-day.is-today { background: #a85839; border-color: #a85839; color: #fff8eb; }
+.cal-day.is-today.has-entries .cal-dot { background: #fff8eb; }
+.cal-hint { margin-right: auto; }
+.cal-legend { display: flex; gap: 18px; justify-content: flex-end; flex-wrap: wrap; margin: 10px 2px 0; color: #7a6b59; font-size: 11px; }
+.cal-legend span { display: inline-flex; align-items: center; gap: 7px; }
+.cal-legend i { display: inline-block; }
+.lg-today { width: 14px; height: 14px; border-radius: 5px; background: #a85839; }
+.lg-dot { width: 6px; height: 6px; border-radius: 50%; background: #a85839; }
+.month-fields { margin-top: 26px; }
+
+/* ---------- calendar planner: week sheets ---------- */
+.week-days { border-top: 1px dashed #d2c3ad; margin-bottom: 24px; }
+.week-day-row { display: grid; grid-template-columns: 104px 1fr; align-items: center; min-height: 48px; border-bottom: 1px dashed #d2c3ad; }
+.week-day-link { display: flex; align-items: center; gap: 9px; text-decoration: none; color: #6d5d4e; padding: 8px 0; min-height: 44px; }
+.wd-name { width: 34px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; color: #7d6d5a; }
+.wd-num { font-family: var(--app-font-serif); font-size: 23px; color: #493a30; line-height: 1; }
+.wd-dot { width: 6px; height: 6px; border-radius: 50%; background: #a85839; }
+a.week-day-link:hover .wd-num { color: var(--rust); }
+.week-day-row.is-outside { opacity: .45; }
+.ht-letter, .ht-num { display: block; }
+.ht-num { font-family: var(--app-font-serif); font-size: 15px; letter-spacing: 0; color: #5c4d3f; margin-top: 2px; }
+.meal-week-row { display: grid; grid-template-columns: 70px repeat(3, 1fr); gap: 12px; align-items: center; min-height: 50px; border-bottom: 1px dashed #d2c3ad; }
+.meal-week-row:first-child { border-top: 1px dashed #d2c3ad; }
+.mw-day { display: flex; align-items: baseline; gap: 7px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; color: #7d6d5a; }
+.mw-day b { font-family: var(--app-font-serif); font-size: 21px; font-weight: 400; letter-spacing: 0; color: #493a30; }
+.mw-cell { display: block; }
+.mw-label { display: none; }
+.hint-text { color: #7d6d5a; font-size: 11px; margin-top: 8px; }
+.print-menu { min-width: 220px; border-color: #d6c8af; background: #fbf7ec; }
+.print-menu-item { font-size: 13px; padding: 11px 13px; cursor: pointer; color: #4d3d31; }
+
+@media (max-width: 760px) {
+  .brand-name { font-size: 20px; }
+  .brand-lockup { min-width: 0; }
+  .context-wrap { padding: 0 13px; margin-bottom: 12px; }
+  .context-bar { gap: 8px; }
+  .chip-link { padding: 8px 11px; font-size: 12px; gap: 6px; }
+  .print-button { width: 40px; padding: 0; justify-content: center; }
+  .print-button span { display: none; }
+  .cal-hint { flex-basis: 100%; }
+  .month-tabs { flex: 1; }
+  .month-tab { flex: 1; justify-content: center; padding: 9px 6px; }
+  .mt-full, .mt-year { display: none; }
+  .mt-short { display: inline; font-weight: 600; }
+  .step-label { min-width: 64px; font-size: 17px; }
+  .week-strip { width: calc(100% - 26px); gap: 4px; margin-bottom: 12px; grid-template-columns: 28px repeat(7, 1fr) 28px; }
+  .ws-step { border-radius: 10px; }
+  .ws-day { border-radius: 10px; }
+  .nav-wrap { margin-bottom: 14px; }
+  .sheet.month-sheet { padding: 30px 14px 26px; }
+  .month-sheet .sheet-head { padding-left: 8px; padding-right: 8px; }
+  .month-sheet .sheet-subtitle { max-width: 72%; }
+  .cal-table { border-spacing: 3px; margin: -3px; width: calc(100% + 6px); }
+  .cal-wk-head, .cal-wk { width: 34px; }
+  .cal-wk-link { width: 30px; height: 30px; font-size: 14px; }
+  .cal-wk-link::before { display: none; }
+  .cal-day { min-height: 50px; border-radius: 10px; gap: 3px; }
+  .cal-num { font-size: 19px; }
+  .month-fields { padding: 0 8px; }
+  .week-day-row { grid-template-columns: 88px 1fr; }
+  .habit-table td:first-child { width: 30%; }
+  .habit-name { padding: 4px 2px; }
+  .habit-table th { padding-left: 0; padding-right: 0; font-size: 9px; letter-spacing: .04em; }
+  .meal-week-row { grid-template-columns: 1fr; gap: 0; padding: 10px 0 6px; }
+  .mw-day { padding-bottom: 2px; }
+  .mw-cell { display: grid; grid-template-columns: 78px 1fr; align-items: center; }
+  .mw-label { display: block; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #8a7a68; }
+  .meal-week-row .row-input { border-bottom: 1px dotted #ded2be; }
+}
+
+@media print {
+  .print-all .month-sheet .cal-day { min-height: 72px; background: transparent; color: #493a30; border-color: #d9cbb5; transform: none; }
+  .print-all .month-sheet .cal-dot, .print-all .cal-legend { display: none; }
+  .print-all .month-sheet .cal-wk-link { background: transparent; }
+  .print-all .week-day-link .wd-dot { display: none; }
+  .print-all .meal-week-row { min-height: 40px; }
+  .print-all .week-day-row { min-height: 40px; }
+}
+
 @page { size: letter portrait; margin: .38in; }
 @media print {
   html, body, #root { background: #fff; margin: 0; min-height: auto; }
   .planner-app { background: #fff; min-height: auto; overflow: visible; }
-  .planner-app::before, .topbar, .nav-wrap, .main-area, .print-controls { display: none !important; }
+  .planner-app::before, .topbar, .nav-wrap, .main-area, .context-wrap, .week-strip, .print-controls { display: none !important; }
   .print-all { display: block !important; }
   .print-all .sheet { display: block !important; width: 7.72in; height: 10.2in; min-height: 10.2in; max-width: none; margin: 0; padding: .48in .56in; box-shadow: none; border-radius: 0; border: 1px solid #d9cbb5; page-break-after: always; break-after: page; overflow: hidden; background-color: #fbf7ec; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
   .print-all .sheet:last-child { page-break-after: auto; break-after: auto; }
@@ -287,4 +441,37 @@
   .print-all .habit-table td { height: 41px; }
   .print-all .sheet-footer { margin-top: 16px; }
   input, textarea { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+
+/* ---------- print: each sheet fills exactly one page ---------- */
+@media print {
+  .print-all .sheet {
+    display: flex !important; flex-direction: column; height: 10.1in !important; min-height: 10.1in !important;
+    padding: .42in .52in !important; break-inside: avoid; animation: none !important; transform: none !important;
+  }
+  .print-all .sheet-content { flex: 1; }
+  .print-all .sheet-footer { margin-top: auto; }
+  .print-all .field-textarea.ruled-area { min-height: 1.3in !important; }
+  .print-all .field-textarea.ruled-area.prompt-lines { min-height: 2.2in !important; }
+  .print-all .overview-notes .field-textarea.ruled-area { min-height: 5.1in !important; }
+  .print-all .field-textarea.ruled-area.open-notes { min-height: 3.3in !important; }
+  .print-all .write-row { min-height: 54px; }
+  .print-all .check-row { min-height: 60px; }
+  .print-all .week-days .week-day-row { min-height: 35px; }
+  .print-all .sheet.week-glance .check-row { min-height: 36px; }
+  .print-all .sheet.week-glance .field-textarea.ruled-area { min-height: .6in !important; }
+  .print-all .sheet.week-glance .week-notes .field-textarea.ruled-area { min-height: .42in !important; }
+  .print-all .habit-table td { height: 29px; }
+  .print-all .meal-week-row { min-height: 31px; }
+  .print-all .field-textarea.ruled-area.grocery-notes { min-height: .55in !important; }
+  .print-all .month-sheet .cal-day { min-height: 58px; }
+  .print-all .field-textarea.ruled-area.month-notes { min-height: 1.3in !important; }
+  .print-all .sheet.week-glance .section-label, .print-all .sheet.week-habits .section-label { margin-top: 12px !important; margin-bottom: 4px !important; }
+  .print-all .sheet.week-glance .section-label:first-child, .print-all .sheet.week-habits .section-label:first-child { margin-top: 0 !important; }
+  .print-all .week-days .week-day-row { min-height: 30px !important; }
+  .print-all .sheet.week-glance .check-row { min-height: 32px !important; }
+  .print-all .habit-table td { height: 26px !important; }
+  .print-all .meal-week-row { min-height: 27px !important; }
+  .print-all .sheet.week-glance .week-notes textarea, .print-all .sheet.week-glance .week-notes .field-textarea { height: .5in !important; min-height: 0 !important; max-height: .5in !important; }
+  .print-all .sheet.week-glance .field-textarea { height: .7in !important; min-height: 0 !important; }
 }
