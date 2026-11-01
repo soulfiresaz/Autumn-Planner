@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { CalendarDays, Check, FolderKanban, Leaf, ListChecks, Search, ShieldCheck } from 'lucide-react';
+import { CalendarDays, Check, FolderKanban, Leaf, ListChecks, Search, Settings, ShieldCheck } from 'lucide-react';
 import { Link, Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
 import { useHashLocation } from 'wouter/use-hash-location';
 import { ErrorBoundary } from '@/components/error-boundary';
@@ -9,6 +9,8 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { addDays, clampToRange, isValidISO, isValidMonth, monthOf, todayISO } from '@/lib/dates';
 import { lastBackup } from '@/lib/backup';
 import { LevelSwitch, PhoneHeader, useRememberWeek, useSwipePages } from '@/components/phone-chrome';
+import { usePlannerName, useApplyAccent } from '@/lib/settings';
+import SettingsPage from '@/pages/settings-page';
 import { PlannerProvider, usePlannerStore } from '@/lib/planner-store';
 import BackupPage from '@/pages/backup-page';
 import ProjectsPage, { ProjectDetailPage } from '@/pages/projects-page';
@@ -27,6 +29,7 @@ const NAV = [
   { href: '/projects', label: 'Projects', icon: FolderKanban, match: (l: string) => l.startsWith('/projects') },
   { href: '/search', label: 'Search', icon: Search, match: (l: string) => l.startsWith('/search') },
   { href: '/backup', label: 'Backup & restore', icon: ShieldCheck, match: (l: string) => l.startsWith('/backup') },
+  { href: '/settings', label: 'Settings', icon: Settings, match: (l: string) => l.startsWith('/settings') },
 ];
 
 function BackupNudge() {
@@ -57,6 +60,8 @@ function Shell({ children }: { children: ReactNode }) {
   const { savedState } = usePlannerStore();
   const [location, setLocation] = useLocation();
   useRememberWeek();
+  useApplyAccent();
+  const plannerName = usePlannerName();
   useSwipePages(setLocation);
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -66,10 +71,10 @@ function Shell({ children }: { children: ReactNode }) {
       <PhoneHeader />
       <LevelSwitch />
       <header className="topbar">
-        <Link href="/" className="brand-lockup" aria-label="Autumn Planner, back to the calendar" data-testid="link-home">
+        <Link href="/" className="brand-lockup" aria-label={`${plannerName}, back to the calendar`} data-testid="link-home">
           <div className="brand-mark" aria-hidden="true"><Leaf size={19} strokeWidth={1.5} /></div>
           <div>
-            <div className="brand-name">Autumn Planner</div>
+            <div className="brand-name">{plannerName}</div>
             <div className="brand-caption">November 2026 &ndash; January 2027</div>
           </div>
         </Link>
@@ -106,6 +111,7 @@ function Routes() {
       <Route path="/projects/:id">{params => <ProjectDetailPage id={params.id} />}</Route>
       <Route path="/search" component={SearchPage} />
       <Route path="/backup" component={BackupPage} />
+      <Route path="/settings" component={SettingsPage} />
       <Route path="/week/:ws/:sheet?">
         {params => (isValidISO(params.ws) ? <WeekPage ws={params.ws} sheet={params.sheet} /> : <NotFound />)}
       </Route>

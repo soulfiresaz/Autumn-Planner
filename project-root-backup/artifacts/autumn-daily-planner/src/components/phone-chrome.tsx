@@ -1,10 +1,11 @@
 import { useEffect, useRef } from 'react';
-import { CalendarCheck, CalendarDays, FolderKanban, ListChecks, Menu, Printer, Search, ShieldCheck } from 'lucide-react';
+import { CalendarCheck, CalendarDays, FolderKanban, ListChecks, Menu, Printer, Search, Settings, ShieldCheck } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import {
   MONTHS, RANGE_START, addDays, clampToRange, fmtMonthDayShort, inRange, isValidISO, isValidMonth, monthOf, todayISO, weekStart,
 } from '@/lib/dates';
+import { usePlannerName } from '@/lib/settings';
 import { lastBackup } from '@/lib/backup';
 import { usePlannerStore } from '@/lib/planner-store';
 import { DAY_SHEETS } from '@/pages/day-sheets';
@@ -128,6 +129,7 @@ export function PhoneHeader() {
   const [location] = useLocation();
   const w = parseLocation(location);
   const stale = useBackupStale();
+  const plannerName = usePlannerName();
   const today = todayISO();
   return (
     <header className="phone-header phone-only">
@@ -144,6 +146,7 @@ export function PhoneHeader() {
             { href: '/projects', label: 'Projects', icon: FolderKanban, id: 'projects' },
             { href: '/search', label: 'Search', icon: Search, id: 'search' },
             { href: '/backup', label: stale ? 'Backup & restore · suggested' : 'Backup & restore', icon: ShieldCheck, id: 'backup' },
+            { href: '/settings', label: 'Settings', icon: Settings, id: 'settings' },
           ].map(item => (
             <DropdownMenuItem key={item.id} asChild className="phone-menu-item">
               <Link href={item.href} data-testid={`menu-${item.id}`}><item.icon size={19} strokeWidth={1.7} /> <span>{item.label}</span></Link>
@@ -156,7 +159,7 @@ export function PhoneHeader() {
           )}
         </DropdownMenuContent>
       </DropdownMenu>
-      <Link href="/" className="phone-brand" data-testid="phone-brand">Autumn Planner</Link>
+      <Link href="/" className="phone-brand" data-testid="phone-brand">{plannerName}</Link>
       {inRange(today) ? (
         <Link href={`/day/${today}/${DAY_SHEETS[0].slug}`} className="today-btn" data-testid="today-button">
           <CalendarCheck size={16} strokeWidth={1.8} /> <span>Today &middot; {fmtMonthDayShort(today)}</span>

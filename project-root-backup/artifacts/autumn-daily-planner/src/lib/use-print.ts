@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { flushSync } from 'react-dom';
+import { usePlannerName } from '@/lib/settings';
 
 /** Lets a page choose what the hidden print copy contains, then opens the print dialog. */
 export function usePrintMode() {
@@ -12,7 +13,8 @@ export function usePrintMode() {
 }
 
 export function useDocumentTitle(title: string) {
+  const name = usePlannerName();
   useEffect(() => {
-    document.title = title;
-  }, [title]);
+    document.title = title.replace('Autumn Planner', name);
+  }, [title, name]);
 }

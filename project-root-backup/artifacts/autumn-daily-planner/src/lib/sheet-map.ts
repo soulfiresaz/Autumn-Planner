@@ -19,7 +19,7 @@ const WEEK_LABELS: Record<string, string> = { glance: 'Week at a glance', tasks:
 
 /** Fields that are settings or choices rather than words the person wrote. */
 export function isWordsField(name: string): boolean {
-  return !/(-pri|-moved|-mslot|-proj|-due|-doneon|^mood$|^rest$|^habits-set$|^focus-proj-)/.test(name);
+  return !/(^oz-|^glass-|-pri|-moved|-mslot|-proj|-due|-doneon|^mood$|^rest$|^habits-set$|^focus-proj-)/.test(name);
 }
 
 export function locate(key: string): { href: string; where: string } | null {
