@@ -1,9 +1,19 @@
 import { Check, X } from 'lucide-react';
-import { DEFAULT_ACCENT, DEFAULT_NAME, MAX_SAVED, PRESETS, useSettings } from '@/lib/settings';
+import { BG_PRESETS, DEFAULT_BG, DEFAULT_NAME, MAX_SAVED, PRESETS, softMatches, useSettings } from '@/lib/settings';
 import { PlainPage } from './plain-page';
 
 export default function SettingsPage() {
-  const { accent, setAccent, nameRaw, setName, saved, setSaved } = useSettings();
+  const { accent, setAccent, nameRaw, setName, saved, setSaved, bg, setBg, savedBg, setSavedBg } = useSettings();
+  const bgSaved = savedBg.includes(bg);
+  const matches = softMatches(accent);
+  const bgSwatch = (c: string, removable = false) => (
+    <span key={c} className="swatch-wrap">
+      <button type="button" className={`swatch ${c === bg ? 'on' : ''}`} style={{ background: c }} aria-label={`Use background ${c}`} aria-pressed={c === bg} onClick={() => setBg(c === DEFAULT_BG ? '' : c)} data-testid={`bgswatch-${c.slice(1)}`}>
+        {c === bg && <Check size={16} strokeWidth={2.4} color="#493a30" />}
+      </button>
+      {removable && <button type="button" className="swatch-x" aria-label={`Remove saved background ${c}`} onClick={() => setSavedBg(savedBg.filter(x => x !== c))}><X size={11} strokeWidth={2.6} /></button>}
+    </span>
+  );
   const isSaved = saved.includes(accent);
   const swatch = (c: string, removable = false) => (
     <span key={c} className="swatch-wrap">
@@ -45,6 +55,28 @@ export default function SettingsPage() {
           <span className="chip-link is-accent">Button</span>
           <span className="holiday-tag" style={{ position: 'static' }}>a little writing</span>
         </div>
+      </section>
+      <section className="settings-block">
+        <h2 className="settings-h">Background color</h2>
+        <p className="soft-hint">The color behind the pages. The pages stay the same easy-to-read cream.</p>
+        <div className="bg-sample" style={{ background: bg }} aria-hidden="true" data-testid="bg-sample">
+          <div className="bg-sample-card"><b>Sample</b>Your pages sit on this color.</div>
+        </div>
+        <div className="accent-row">
+          <label className="color-pick">
+            <input type="color" value={bg} onChange={e => setBg(e.target.value)} aria-label="Pick any background color" data-testid="bg-input" />
+            <span>Pick any color</span>
+          </label>
+          <code className="hex">{bg}</code>
+          <button type="button" className="mini-btn" disabled={bgSaved || savedBg.length >= MAX_SAVED} onClick={() => setSavedBg([...savedBg, bg])} data-testid="save-bg">{bgSaved ? 'Saved' : 'Save this color'}</button>
+          <button type="button" className="mini-btn" onClick={() => setBg('')} data-testid="reset-bg">Back to the original</button>
+        </div>
+        <h3 className="settings-sub">Soft matches for your accent</h3>
+        <div className="swatches">{matches.map(c => bgSwatch(c))}</div>
+        <h3 className="settings-sub">Your saved backgrounds</h3>
+        {savedBg.length ? <div className="swatches">{savedBg.map(c => bgSwatch(c, true))}</div> : <p className="soft-hint">Nothing saved yet.</p>}
+        <h3 className="settings-sub">Ready-made light colors</h3>
+        <div className="swatches">{BG_PRESETS.map(c => bgSwatch(c))}</div>
       </section>
     </PlainPage>
   );

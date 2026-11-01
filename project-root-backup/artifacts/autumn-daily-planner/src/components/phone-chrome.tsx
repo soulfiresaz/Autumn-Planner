@@ -145,7 +145,7 @@ export function PhoneHeader() {
             { href: '/tasks', label: 'Tasks', icon: ListChecks, id: 'tasks' },
             { href: '/projects', label: 'Projects', icon: FolderKanban, id: 'projects' },
             { href: '/search', label: 'Search', icon: Search, id: 'search' },
-            { href: '/backup', label: stale ? 'Backup & restore · suggested' : 'Backup & restore', icon: ShieldCheck, id: 'backup' },
+            { href: '/backup', label: 'Backup & restore', icon: ShieldCheck, id: 'backup' },
             { href: '/settings', label: 'Settings', icon: Settings, id: 'settings' },
           ].map(item => (
             <DropdownMenuItem key={item.id} asChild className="phone-menu-item">

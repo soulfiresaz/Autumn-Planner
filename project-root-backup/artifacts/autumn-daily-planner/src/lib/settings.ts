@@ -7,6 +7,9 @@ export const MAX_SAVED = 12;
 
 export const PRESETS = ['#a85839', '#b8862b', '#687454', '#2f6f73', '#3d5a99', '#6b4c9a', '#a8466f', '#c2492e', '#5a4a3c'];
 
+export const DEFAULT_BG = '#f1ecdf';
+export const BG_PRESETS = ['#f1ecdf', '#f3e6dc', '#f5e9d2', '#e8eddc', '#dfece9', '#e1e7f3', '#ebe3f2', '#f3e1e8', '#ece7e1'];
+
 export const isHex = (s: string) => /^#[0-9a-f]{6}$/i.test(s);
 
 function rgb(hex: string): [number, number, number] {
@@ -38,6 +41,24 @@ function textOn(hex: string): string {
   return lum > 0.4 ? '#2b2118' : '#fff8eb';
 }
 
+export function mixHex(a: string, b: string, t: number) {
+  const x = rgb(a), y = rgb(b);
+  const c = x.map((v, i) => Math.round(v * t + y[i] * (1 - t)));
+  return '#' + c.map(v => v.toString(16).padStart(2, '0')).join('');
+}
+
+/** Soft backgrounds that go with an accent color. */
+export const softMatches = (accent: string) => [
+  mixHex(accent, '#ffffff', 0.12),
+  mixHex(accent, DEFAULT_BG, 0.18),
+  mixHex(accent, DEFAULT_BG, 0.3),
+];
+
+export function applyBg(hex: string) {
+  const root = document.documentElement.style;
+  if (isHex(hex)) root.setProperty('--page-bg', hex); else root.removeProperty('--page-bg');
+}
+
 export function applyAccent(hex: string) {
   const color = isHex(hex) ? hex : DEFAULT_ACCENT;
   const [h, s, l] = hslOf(color);
@@ -53,10 +74,15 @@ export function useSettings() {
   const [accentRaw, setAccent] = useRawField('s:accent');
   const [nameRaw, setName] = useRawField('s:name');
   const [savedRaw, setSavedRaw] = useRawField('s:saved');
+  const [bgRaw, setBg] = useRawField('s:bg');
+  const [savedBgRaw, setSavedBgRaw] = useRawField('s:savedbg');
+  const bg = isHex(bgRaw) ? bgRaw.toLowerCase() : DEFAULT_BG;
+  const savedBg = savedBgRaw.split(',').filter(isHex);
+  const setSavedBg = (list: string[]) => setSavedBgRaw(list.join(','));
   const accent = isHex(accentRaw) ? accentRaw.toLowerCase() : DEFAULT_ACCENT;
   const saved = savedRaw.split(',').filter(isHex);
   const setSaved = (list: string[]) => setSavedRaw(list.join(','));
-  return { accent, setAccent, name: nameRaw.trim() || DEFAULT_NAME, nameRaw, setName, saved, setSaved };
+  return { bg, setBg, savedBg, setSavedBg, accent, setAccent, name: nameRaw.trim() || DEFAULT_NAME, nameRaw, setName, saved, setSaved };
 }
 
 export function usePlannerName() {
@@ -66,6 +92,7 @@ export function usePlannerName() {
 
 /** Keeps the page colors in step with the chosen accent. */
 export function useApplyAccent() {
-  const { accent } = useSettings();
+  const { accent, bg } = useSettings();
   useEffect(() => { applyAccent(accent); }, [accent]);
+  useEffect(() => { applyBg(bg === DEFAULT_BG ? '' : bg); }, [bg]);
 }

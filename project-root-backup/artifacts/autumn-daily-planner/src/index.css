@@ -93,7 +93,7 @@
   background:
     radial-gradient(ellipse at 8% 4%, rgba(210, 161, 105, .12), transparent 31rem),
     radial-gradient(ellipse at 94% 90%, rgba(130, 143, 102, .10), transparent 34rem),
-    #f1ecdf;
+    var(--page-bg, #f1ecdf);
 }
 .planner-app::before {
   content: '';
@@ -811,7 +811,7 @@ a.day-letter:hover { background: #fffaf0; color: var(--rust); transform: transla
   .context-actions .print-button, .context-actions .chip-link { display: none !important; }
   .phone-header {
     position: sticky; top: 0; z-index: 40; align-items: center; justify-content: space-between; gap: 10px;
-    padding: 8px 12px; min-height: 56px; background: rgba(244, 238, 224, .96); backdrop-filter: blur(8px);
+    padding: 8px 12px; min-height: 56px; background: color-mix(in srgb, var(--page-bg, #f4eee0) 96%, transparent); backdrop-filter: blur(8px);
     border-bottom: 1px solid rgba(196, 177, 150, .5);
   }
   .menu-btn { position: relative; width: 46px; height: 46px; display: grid; place-items: center; border-radius: 14px; border: 1px solid #cbb99e; background: rgba(250, 247, 237, .8); color: #49392e; cursor: pointer; }
@@ -904,3 +904,7 @@ html, body { overscroll-behavior-x: none; }
 .swatch-x { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%; border: 1px solid #cbb99e; background: #fffaf0; color: #493a30; display: grid; place-items: center; cursor: pointer; padding: 0; }
 .accent-preview { display: flex; gap: 14px; align-items: center; margin-top: 20px; }
 .mini-btn:disabled { opacity: .55; cursor: default; }
+
+.bg-sample { display: flex; align-items: center; justify-content: center; padding: 18px; border-radius: 16px; border: 1px solid #cbb99e; max-width: 340px; margin-top: 8px; }
+.bg-sample-card { width: 70%; padding: 14px 16px; border-radius: 12px; background: #f9f5e9; border: 1px solid #dfd2bb; font-size: 13px; color: #483a30; box-shadow: 0 6px 16px rgba(91,68,43,.1); }
+.bg-sample-card b { display: block; font-family: var(--app-font-serif); font-weight: 400; font-size: 20px; color: var(--rust); margin-bottom: 2px; }
