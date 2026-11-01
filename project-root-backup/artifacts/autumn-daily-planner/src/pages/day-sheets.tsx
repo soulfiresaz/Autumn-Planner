@@ -162,8 +162,10 @@ function BeginSheet({ date }: { date: string }) {
       </div>
       <TodayHabits date={date} />
       <FocusProjects date={date} />
-      <div className="section-label brain-label"><span className="label-dot" />Notes &amp; brain dump</div>
-      <PlainTextarea name="brain" label="Notes and brain dump" className="field-textarea ruled-area brain-area" />
+      <div className="brain-panel">
+        <div className="section-label brain-label"><span className="label-dot" />Notes &amp; brain dump</div>
+        <PlainTextarea name="brain" label="Notes and brain dump" className="field-textarea ruled-area brain-area" />
+      </div>
     </>
   );
 }

@@ -1011,8 +1011,6 @@ html, body { overscroll-behavior-x: none; }
 .bg-sample-card { width: 70%; padding: 14px 16px; border-radius: 12px; background: var(--c-f9f5e9); border: 1px solid var(--c-dfd2bb); font-size: calc(13px * var(--text-scale, 1)); color: var(--c-483a30); box-shadow: 0 6px 16px rgba(91,68,43,.1); }
 .bg-sample-card b { display: block; font-family: var(--app-font-serif); font-weight: 400; font-size: calc(20px * var(--text-scale, 1)); color: var(--rust); margin-bottom: 2px; }
 
-html[data-theme="dark"] .art-corner { mix-blend-mode: screen; filter: invert(1) hue-rotate(180deg) brightness(.55) contrast(1.1); opacity: .55; -webkit-mask-image: radial-gradient(closest-side, #000 45%, transparent 100%); mask-image: radial-gradient(closest-side, #000 45%, transparent 100%); }
-@media print { html[data-theme="dark"] .art-corner { filter: none; mix-blend-mode: multiply; -webkit-mask-image: none; mask-image: none; opacity: .6; } }
 /* Dark mode: calendar days stay cream with dark writing, easy to read */
 html[data-theme="dark"] .cal-day:not(.is-today),
 html[data-theme="dark"] .cal-day:not(.is-today):hover {
@@ -1172,3 +1170,20 @@ a.day-letter.is-today:hover, a.day-letter.is-today { background: var(--rust); bo
 .app-nav-link.active:hover { color: var(--c-49392e); }
 .cal-day.is-today:hover { background: var(--rust); border-color: var(--rust); color: var(--on-rust); }
 .chip-link.is-accent:hover { color: var(--on-rust); }
+
+/* Quiet sunrise art: no blend tricks, so it looks the same in light and dark */
+.art-corner { mix-blend-mode: normal; opacity: .9; object-fit: initial; }
+
+/* Sections as soft panels on screen (printing keeps its own layout) */
+@media screen {
+  .brain-panel, .begin-cols > div, .today-habits, .focus-projects, .begin-top {
+    padding: 14px 18px 12px; border-radius: 14px;
+    background: color-mix(in srgb, var(--c-493a30) 5%, transparent);
+    border: 1px solid color-mix(in srgb, var(--c-493a30) 12%, transparent);
+    margin-bottom: 12px;
+  }
+  .begin-cols { gap: 12px; }
+  .begin-cols > div { margin-bottom: 0; }
+  .begin-top { margin-top: 0; }
+  .brain-panel .brain-label { margin-top: 0; }
+}
