@@ -6,7 +6,7 @@ import { useHashLocation } from 'wouter/use-hash-location';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { clampToRange, isValidISO, isValidMonth, monthOf, todayISO } from '@/lib/dates';
+import { addDays, clampToRange, isValidISO, isValidMonth, monthOf, todayISO } from '@/lib/dates';
 import { lastBackup } from '@/lib/backup';
 import { PlannerProvider, usePlannerStore } from '@/lib/planner-store';
 import BackupPage from '@/pages/backup-page';
@@ -25,7 +25,7 @@ const NAV = [
   { href: '/tasks', label: 'Tasks', icon: ListChecks, match: (l: string) => l.startsWith('/tasks') },
   { href: '/projects', label: 'Projects', icon: FolderKanban, match: (l: string) => l.startsWith('/projects') },
   { href: '/search', label: 'Search', icon: Search, match: (l: string) => l.startsWith('/search') },
-  { href: '/backup', label: 'Backup', icon: ShieldCheck, match: (l: string) => l.startsWith('/backup') },
+  { href: '/backup', label: 'Backup & restore', icon: ShieldCheck, match: (l: string) => l.startsWith('/backup') },
 ];
 
 function BackupNudge() {
@@ -42,6 +42,14 @@ function BackupNudge() {
       <button type="button" className="mini-btn" onClick={() => setHidden(true)}>Later</button>
     </div>
   );
+}
+
+/** The Calendar button opens the month you are looking at (or this month, from other pages). */
+function calendarHref(location: string) {
+  const [, kind, id] = location.split('/');
+  if (kind === 'month' && isValidMonth(id)) return `/month/${id}`;
+  if ((kind === 'day' || kind === 'week') && isValidISO(id)) return `/month/${monthOf(clampToRange(kind === 'week' ? addDays(id, 3) : id))}`;
+  return '/';
 }
 
 function Shell({ children }: { children: ReactNode }) {
@@ -66,8 +74,8 @@ function Shell({ children }: { children: ReactNode }) {
       </header>
       <nav className="app-nav" aria-label="Planner sections">
         {NAV.map(n => (
-          <Link key={n.href} href={n.href} className={`app-nav-link ${n.match(location) ? 'active' : ''}`} aria-current={n.match(location) ? 'page' : undefined} data-testid={`nav-${n.label.toLowerCase()}`}>
-            <n.icon size={16} strokeWidth={1.7} /><span>{n.label}</span>
+          <Link key={n.href} href={n.href === '/' ? calendarHref(location) : n.href} className={`app-nav-link ${n.match(location) ? 'active' : ''}`} aria-current={n.match(location) ? 'page' : undefined} data-testid={`nav-${n.label.toLowerCase()}`}>
+            <n.icon size={16} strokeWidth={1.7} /><span className={n.label.length > 9 ? 'nav-long' : ''}>{n.label}</span>
           </Link>
         ))}
       </nav>

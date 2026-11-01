@@ -1,9 +1,9 @@
-import { CalendarCheck, CalendarDays, CalendarRange, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CalendarCheck, CalendarRange, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link, Redirect } from 'wouter';
 import { PageLayout, PrintMenu, SheetTabs } from '@/components/nav';
 import {
-  RANGE_END, RANGE_START, addDays, clampToRange, dayNumber, fmtLong, fmtMonthDayShort, fmtWeekday, inRange, isValidISO,
-  monthOf, todayISO, weekNumber, weekStart,
+  RANGE_END, RANGE_START, addDays, dayNumber, fmtLong, fmtMonthDayShort, fmtWeekday, inRange, isValidISO,
+  todayISO, weekNumber, weekStart,
 } from '@/lib/dates';
 import { Scope, usePlannerStore } from '@/lib/planner-store';
 import { useDocumentTitle, usePrintMode } from '@/lib/use-print';
@@ -59,9 +59,6 @@ export default function DayPage({ date, sheet }: { date: string; sheet?: string 
   const bar = (
     <div className="context-bar">
       <div className="context-left">
-        <Link href={`/month/${monthOf(clampToRange(date))}`} className="chip-link" data-testid="link-calendar">
-          <CalendarDays size={15} strokeWidth={1.7} /> <span>Calendar</span>
-        </Link>
         <Link href={`/week/${ws}`} className="chip-link" data-testid="link-week">
           <CalendarRange size={15} strokeWidth={1.7} /> <span>Week {weekNumber(ws)}</span>
         </Link>

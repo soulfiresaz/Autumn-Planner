@@ -59,7 +59,7 @@ export default function ProjectsPage() {
   for (let i = 0; i < PROJECT_SLOTS; i++) if (typeof values[`proj:${i}:name`] === 'string') shown = i + 1;
   const count = Math.min(PROJECT_SLOTS, shown + 1);
   return (
-    <PlainPage title="Projects" subtitle="Name a project once. Then pick it on any task, and its tasks gather here. Bring any of them to the day you want to work on it." testid="projects-page">
+    <PlainPage title="Projects" subtitle="A project is a bigger goal made of many tasks. Name it here, then choose it in the Project box on any task, and that task is filed here. Use the arrow on a task to bring it to the day you want to work on it." testid="projects-page">
       <div className="project-grid">
         {Array.from({ length: count }, (_, i) => <ProjectCard key={i} id={i} />)}
       </div>

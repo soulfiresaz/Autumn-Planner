@@ -223,7 +223,8 @@ function ProjectsPanel() {
   const count = Math.min(PROJECT_SLOTS, last + 2);
   return (
     <div className="projects-panel screen-only" data-testid="projects-panel">
-      <div className="section-label"><span className="label-dot" />Your projects &middot; name them here, then pick one on any task</div>
+      <div className="section-label"><span className="label-dot" />Your projects</div>
+      <p className="soft-hint">A <b>task</b> is one thing to do. A <b>project</b> is a bigger goal made of many tasks. Name a project here, then choose it in the &ldquo;Project&rdquo; box on any task below to file that task under it.</p>
       {Array.from({ length: count }, (_, i) => <ProjectEditRow key={i} id={i} />)}
       <Link href="/projects" className="inline-link projects-more">Open the Projects page for notes and every task in a project</Link>
     </div>
