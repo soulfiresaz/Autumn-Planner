@@ -1011,15 +1011,18 @@ html, body { overscroll-behavior-x: none; }
 .bg-sample-card { width: 70%; padding: 14px 16px; border-radius: 12px; background: var(--c-f9f5e9); border: 1px solid var(--c-dfd2bb); font-size: calc(13px * var(--text-scale, 1)); color: var(--c-483a30); box-shadow: 0 6px 16px rgba(91,68,43,.1); }
 .bg-sample-card b { display: block; font-family: var(--app-font-serif); font-weight: 400; font-size: calc(20px * var(--text-scale, 1)); color: var(--rust); margin-bottom: 2px; }
 
-/* Dark mode: calendar days stay cream with dark writing, easy to read */
+/* Dark mode: calendar days and week numbers use the same soft color as the month title */
 html[data-theme="dark"] .cal-day:not(.is-today),
-html[data-theme="dark"] .cal-day:not(.is-today):hover {
+html[data-theme="dark"] .cal-day:not(.is-today):hover,
+html[data-theme="dark"] .cal-wk-link,
+html[data-theme="dark"] .cal-wk-link:hover {
   --rust: var(--accent-orig, #a85839);
-  background: #f9f5e9; border-color: #d9cbb5; color: #493a30;
+  background: var(--c-493a30); border-color: var(--c-493a30); color: var(--page-bg, #231b2d);
 }
-html[data-theme="dark"] .cal-day:not(.is-today) .cal-num { color: #3a2e25; }
-html[data-theme="dark"] .cal-day:not(.is-today) .cal-tag { color: var(--accent-orig, #a85839); }
-@media print { html[data-theme="dark"] .cal-day:not(.is-today) { background: transparent; } }
+html[data-theme="dark"] .cal-day:not(.is-today) .cal-num,
+html[data-theme="dark"] .cal-wk-link * { color: var(--page-bg, #231b2d); }
+html[data-theme="dark"] .cal-day:not(.is-today) .cal-tag { color: var(--page-bg, #231b2d); font-weight: 600; }
+@media print { html[data-theme="dark"] .cal-day:not(.is-today), html[data-theme="dark"] .cal-wk-link { background: transparent; } }
 
 /* Plain pages (Tasks, Projects, Search, Settings...): intro text uses the full width */
 .plain-sheet .sheet-subtitle { max-width: none; }
