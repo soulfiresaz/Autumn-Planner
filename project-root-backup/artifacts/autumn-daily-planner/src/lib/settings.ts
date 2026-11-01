@@ -181,6 +181,7 @@ export function useApplyAccent() {
     const show = (isDark: boolean) => {
       applyTheme(isDark, darkBase);
       applyAccent(isDark ? accentForDark(accent) : accent);
+      document.documentElement.style.setProperty('--accent-orig', accent);
       applyBg(!isDark && bg !== DEFAULT_BG ? bg : '');
     };
     show(dark);

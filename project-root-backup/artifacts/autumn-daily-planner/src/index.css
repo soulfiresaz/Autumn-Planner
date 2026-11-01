@@ -1013,3 +1013,41 @@ html, body { overscroll-behavior-x: none; }
 
 html[data-theme="dark"] .art-corner { mix-blend-mode: screen; filter: invert(1) hue-rotate(180deg) brightness(.55) contrast(1.1); opacity: .55; -webkit-mask-image: radial-gradient(closest-side, #000 45%, transparent 100%); mask-image: radial-gradient(closest-side, #000 45%, transparent 100%); }
 @media print { html[data-theme="dark"] .art-corner { filter: none; mix-blend-mode: multiply; -webkit-mask-image: none; mask-image: none; opacity: .6; } }
+
+/* Dark mode: calendar days stay cream with dark writing, easy to read */
+html[data-theme="dark"] .cal-day:not(.is-today),
+html[data-theme="dark"] .cal-day:not(.is-today):hover {
+  --rust: var(--accent-orig, #a85839);
+  background: #f9f5e9; border-color: #d9cbb5; color: #493a30;
+}
+html[data-theme="dark"] .cal-day:not(.is-today) .cal-num { color: #3a2e25; }
+html[data-theme="dark"] .cal-day:not(.is-today) .cal-tag { color: var(--accent-orig, #a85839); }
+@media print { html[data-theme="dark"] .cal-day:not(.is-today) { background: transparent; } }
+
+/* Plain pages (Tasks, Projects, Search, Settings...): intro text uses the full width */
+.plain-sheet .sheet-subtitle { max-width: none; }
+.project-row, .project-row > * { min-width: 0; }
+.project-row { max-width: 100%; box-sizing: border-box; overflow-wrap: anywhere; }
+
+/* Phone: bigger, bolder writing on Tasks, Projects and the other plain pages */
+@media (max-width: 760px) {
+  .plain-sheet .sheet-subtitle { font-size: 16px; line-height: 1.55; color: var(--c-5c4d3f); }
+  .soft-hint { font-size: 15px; }
+  .plain-sheet { font-size: 16px; }
+  .plain-sheet .group-title { font-size: 24px; line-height: 1.2; }
+  .plain-sheet .inline-link { font-size: 17px; font-weight: 600; }
+  .task-text, .add-text { font-size: 18px; font-weight: 600; height: 46px; }
+  .task-row { min-height: 56px; }
+  .add-date, .task-select, .task-due { font-size: 15px; min-height: 44px; }
+  .plain-sheet .seg-btn { font-size: 15px; min-height: 42px; padding: 8px 16px; font-weight: 600; }
+  .plain-sheet .mini-btn, .plain-sheet .chip-link { font-size: 15px; font-weight: 600; min-height: 44px; }
+  .project-row { padding: 18px; }
+  .pr-main b { font-size: 24px; font-weight: 700; }
+  .pr-main i { font-size: 16px; white-space: normal; color: var(--c-6d5b4c); }
+  .project-name { font-size: 28px; font-weight: 600; }
+  .project-task-text { font-size: 18px; font-weight: 600; }
+  .project-task { min-height: 52px; }
+  .mini-cap { font-size: 12px; }
+}
+
+.project-list { grid-template-columns: minmax(0, 1fr); }
