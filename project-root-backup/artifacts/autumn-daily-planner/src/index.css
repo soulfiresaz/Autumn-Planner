@@ -1051,3 +1051,16 @@ html[data-theme="dark"] .cal-day:not(.is-today) .cal-tag { color: var(--accent-o
 }
 
 .project-list { grid-template-columns: minmax(0, 1fr); }
+
+/* Tighter space between the checkbox and the first letter */
+.task-row { column-gap: 4px; }
+.task-text { padding-left: 2px; }
+.project-task { column-gap: 4px; }
+@media (max-width: 760px) {
+  .task-row { grid-template-columns: 30px minmax(0, 1fr) auto; column-gap: 4px; }
+  .task-row.has-meta { grid-template-columns: 30px minmax(0, 1fr) auto; }
+  .task-row.has-meta .task-meta { grid-column: 2 / 4; }
+  .project-task { grid-template-columns: 30px 1fr auto auto; column-gap: 4px; }
+  .task-text { padding-left: 2px; }
+}
+@media print { .print-all .task-row { column-gap: 8px; } }
