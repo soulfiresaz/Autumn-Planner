@@ -90,6 +90,14 @@ export function shade(hex: string, delta: number): string {
   return hexOfHsl(h, sat / 100, Math.min(0.98, Math.max(0.02, l / 100 + delta)));
 }
 
+/** The color behind the page when you do not pick one: the same color, clearly deeper so the page stands apart. */
+export function autoBehind(page: string, dark: boolean): string {
+  const [, , l] = hslOf(page);
+  const lum = l / 100;
+  const delta = dark ? (lum - 0.11 < 0.02 ? 0.09 : -0.11) : -0.1;
+  return shade(page, delta);
+}
+
 /** Keep a dark page color genuinely dark so the writing stays readable. */
 export function clampDark(hex: string): string {
   const [h, s, l] = hslOf(hex);
@@ -123,39 +131,50 @@ function darken(hex: string, base: string): string {
 
 const hslTriplet = (hex: string) => { const [h, s, l] = hslOf(hex); return `${h} ${s}% ${l}%`; };
 
-function darkCss(pageRaw: string): string {
+function darkCss(pageRaw: string, backRaw = ''): string {
   const page = clampDark(pageRaw);
-  const base = shade(page, -0.06); // the color behind the page, chosen for you
+  const base = autoBehind(page, true);
+  const back = isHex(backRaw) ? backRaw : base;
   const d = (hex: string) => darken(hex, base);
   const vars = PALETTE.map(h => `--c-${h.slice(1)}:${d(h)};`).join('');
   const tokens = [
-    ['--background', base], ['--foreground', d('#493a30')], ['--card', d('#fffaf0')], ['--card-foreground', d('#493a30')],
+    ['--background', back], ['--foreground', d('#493a30')], ['--card', d('#fffaf0')], ['--card-foreground', d('#493a30')],
     ['--border', d('#d2c3ad')], ['--input', d('#d2c3ad')], ['--muted', d('#ded2be')], ['--muted-foreground', d('#8a7a68')],
     ['--secondary', d('#d9cbb5')], ['--accent', d('#d9cbb5')],
   ].map(([k, v]) => `${k}:${hslTriplet(v)};`).join('');
   const pageVars = `--paper:${page};--c-f9f5e9:${page};--c-fbf7ec:${shade(page, 0.015)};`;
-  return `@media screen{html[data-theme="dark"]{color-scheme:dark;--page-bg:${base};${vars}${pageVars}${tokens}}}`;
+  return `@media screen{html[data-theme="dark"]{color-scheme:dark;--page-bg:${back};${vars}${pageVars}${tokens}}}`;
 }
 
-export function applyTheme(dark: boolean, page: string) {
+export function applyTheme(dark: boolean, page: string, back = '') {
   const root = document.documentElement;
   let el = document.getElementById('dark-theme') as HTMLStyleElement | null;
   if (!el) { el = document.createElement('style'); el.id = 'dark-theme'; document.head.appendChild(el); }
-  el.textContent = darkCss(page);
+  el.textContent = darkCss(page, back);
   if (dark) root.setAttribute('data-theme', 'dark'); else root.removeAttribute('data-theme');
 }
 
 const PAGE_PROPS = ['--paper', '--c-f9f5e9', '--c-fbf7ec', '--page-bg'];
 
-/** Light mode: the page is the color you picked, and the color behind it is chosen for you. */
-export function applyLightPage(hex: string) {
+/** Dark mode takes over the page colors, so clear anything the light version set. */
+export function clearLightPage() {
   const root = document.documentElement.style;
-  if (!isHex(hex) || hex.toLowerCase() === DEFAULT_BG) { PAGE_PROPS.forEach(p => root.removeProperty(p)); return; }
+  PAGE_PROPS.forEach(p => root.removeProperty(p));
+}
+
+/** Light mode: the page is the color you picked, and the color behind it is chosen for you. */
+export function applyLightPage(hex: string, back = '') {
+  const root = document.documentElement.style;
+  if (!isHex(hex) || hex.toLowerCase() === DEFAULT_BG) {
+    PAGE_PROPS.forEach(p => root.removeProperty(p));
+    root.setProperty('--page-bg', isHex(back) ? back : autoBehind(DEFAULT_BG, false));
+    return;
+  }
   const page = clampLight(hex);
   root.setProperty('--paper', page);
   root.setProperty('--c-f9f5e9', page);
   root.setProperty('--c-fbf7ec', shade(page, 0.01));
-  root.setProperty('--page-bg', shade(page, -0.04));
+  root.setProperty('--page-bg', isHex(back) ? back : autoBehind(page, false));
 }
 
 export function applyAccent(hex: string) {
@@ -182,6 +201,8 @@ export function useSettings() {
   const darkBase = isHex(darkRaw) ? darkRaw.toLowerCase() : DEFAULT_DARK;
   const savedDark = savedDarkRaw.split(',').filter(isHex);
   const setSavedDark = (list: string[]) => setSavedDarkRaw(list.join(','));
+  const [backLRaw, setBackL] = useRawField('s:bgback');
+  const [backDRaw, setBackD] = useRawField('s:darkback');
   const [bgRaw, setBg] = useRawField('s:bg');
   const [savedBgRaw, setSavedBgRaw] = useRawField('s:savedbg');
   const bg = isHex(bgRaw) ? bgRaw.toLowerCase() : DEFAULT_BG;
@@ -190,7 +211,7 @@ export function useSettings() {
   const accent = isHex(accentRaw) ? accentRaw.toLowerCase() : DEFAULT_ACCENT;
   const saved = savedRaw.split(',').filter(isHex);
   const setSaved = (list: string[]) => setSavedRaw(list.join(','));
-  return { textSize, setTextSize: setSize, theme, setTheme, darkBase, setDark, savedDark, setSavedDark, bg, setBg, savedBg, setSavedBg, accent, setAccent, name: nameRaw.trim() || DEFAULT_NAME, nameRaw, setName, saved, setSaved };
+  return { backLight: isHex(backLRaw) ? backLRaw.toLowerCase() : '', setBackLight: setBackL, backDark: isHex(backDRaw) ? backDRaw.toLowerCase() : '', setBackDark: setBackD, textSize, setTextSize: setSize, theme, setTheme, darkBase, setDark, savedDark, setSavedDark, bg, setBg, savedBg, setSavedBg, accent, setAccent, name: nameRaw.trim() || DEFAULT_NAME, nameRaw, setName, saved, setSaved };
 }
 
 export function usePlannerName() {
@@ -212,14 +233,14 @@ export function useIsDark() {
 }
 
 export function useApplyAccent() {
-  const { accent, bg, darkBase, textSize } = useSettings();
+  const { accent, bg, darkBase, textSize, backLight, backDark } = useSettings();
   const dark = useIsDark();
   useEffect(() => {
     const show = (isDark: boolean) => {
-      applyTheme(isDark, darkBase);
+      applyTheme(isDark, darkBase, backDark);
       applyAccent(isDark ? accentForDark(accent) : accent);
       document.documentElement.style.setProperty('--accent-orig', accent);
-      applyLightPage(isDark ? '' : bg);
+      if (isDark) clearLightPage(); else applyLightPage(bg, backLight);
     };
     const scale = TEXT_SIZES.find(t => t.id === textSize)!.scale;
     document.documentElement.style.setProperty('--text-scale', String(scale));
@@ -230,5 +251,5 @@ export function useApplyAccent() {
     window.addEventListener('beforeprint', before);
     window.addEventListener('afterprint', after);
     return () => { window.removeEventListener('beforeprint', before); window.removeEventListener('afterprint', after); };
-  }, [dark, accent, bg, darkBase, textSize]);
+  }, [dark, accent, bg, darkBase, textSize, backLight, backDark]);
 }

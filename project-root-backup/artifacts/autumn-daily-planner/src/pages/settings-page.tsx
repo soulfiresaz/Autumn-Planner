@@ -1,11 +1,11 @@
 import { Check, X } from 'lucide-react';
 import { ColorGuide } from '@/components/color-guide';
 import { ColorField } from '@/components/color-field';
-import { TEXT_SIZES, DARK_PRESETS, BG_PRESETS, DEFAULT_BG, DEFAULT_DARK, DEFAULT_NAME, MAX_SAVED, PRESETS, clampDark, clampLight, shade, softMatches, useIsDark, useSettings } from '@/lib/settings';
+import { TEXT_SIZES, DARK_PRESETS, BG_PRESETS, DEFAULT_BG, DEFAULT_DARK, DEFAULT_NAME, MAX_SAVED, PRESETS, clampDark, clampLight, autoBehind, softMatches, useIsDark, useSettings } from '@/lib/settings';
 import { PlainPage } from './plain-page';
 
 export default function SettingsPage() {
-  const { accent, setAccent, nameRaw, setName, saved, setSaved, bg, setBg, savedBg, setSavedBg, theme, setTheme, textSize, setTextSize, darkBase, setDark, savedDark, setSavedDark } = useSettings();
+  const { accent, setAccent, nameRaw, setName, saved, setSaved, bg, setBg, savedBg, setSavedBg, theme, setTheme, textSize, setTextSize, darkBase, setDark, savedDark, setSavedDark, backLight, setBackLight, backDark, setBackDark } = useSettings();
   const isDark = useIsDark();
 
   // One set of page-color controls, for whichever mode you are looking at.
@@ -15,7 +15,9 @@ export default function SettingsPage() {
   const setSavedPages = isDark ? setSavedDark : setSavedBg;
   const pageSaved = savedPages.includes(page);
   const shown = isDark ? clampDark(page) : clampLight(page);
-  const behind = shade(shown, isDark ? -0.06 : -0.04);
+  const customBack = isDark ? backDark : backLight;
+  const setBack = isDark ? setBackDark : setBackLight;
+  const behind = customBack || autoBehind(shown, isDark);
   const presets: { hex: string; label?: string }[] = isDark ? DARK_PRESETS : BG_PRESETS.map(hex => ({ hex }));
   const matches = softMatches(accent);
   const pageSwatch = (c: string, label?: string, removable = false) => (
@@ -70,9 +72,9 @@ export default function SettingsPage() {
 
       <section className="settings-block">
         <h2 className="settings-h">Page color &middot; {isDark ? 'dark' : 'light'}</h2>
-        <p className="soft-hint">The color of the page you write on. The color behind it is chosen for you, a little {isDark ? 'darker' : 'deeper'} so the page stands out.</p>
+        <p className="soft-hint">The color of the page you write on. The color behind it starts as a deeper shade of the same color, so the page stands out. You can pick your own below.</p>
         <div className="bg-sample" style={{ background: behind }} aria-hidden="true" data-testid="page-sample">
-          <div className="bg-sample-card" style={{ background: shown, borderColor: shade(shown, isDark ? 0.1 : -0.08), color: isDark ? '#fff' : '#483a30' }}><b>Sample</b>This is your page.</div>
+          <div className="bg-sample-card" style={{ background: shown, borderColor: isDark ? 'rgba(255,255,255,.18)' : 'rgba(0,0,0,.12)', color: isDark ? '#fff' : '#483a30' }}><b>Sample</b>This is your page.</div>
         </div>
         <div className="accent-row">
           <label className="color-pick">
@@ -82,6 +84,15 @@ export default function SettingsPage() {
           <code className="hex">{page}</code>
           <button type="button" className="mini-btn" disabled={pageSaved || savedPages.length >= MAX_SAVED} onClick={() => setSavedPages([...savedPages, page])} data-testid={isDark ? 'save-dark' : 'save-bg'}>{pageSaved ? 'Saved' : 'Save this color'}</button>
           <button type="button" className="mini-btn" onClick={() => setPage(isDark ? DEFAULT_DARK : DEFAULT_BG)} data-testid={isDark ? 'reset-dark' : 'reset-bg'}>Back to the original</button>
+        </div>
+        <h3 className="settings-sub">Color behind the page</h3>
+        <div className="accent-row">
+          <label className="color-pick">
+            <ColorField value={behind} onCommit={setBack} label="Pick the color behind the page" testid="back-input" />
+            <span>{customBack ? 'Your own color' : 'Automatic'}</span>
+          </label>
+          <code className="hex">{behind}</code>
+          <button type="button" className="mini-btn" disabled={!customBack} onClick={() => setBack('')} data-testid="reset-back">Automatic</button>
         </div>
         {!isDark && (<><h3 className="settings-sub">Soft matches for your accent</h3><div className="swatches">{matches.map(c => pageSwatch(c))}</div></>)}
         <h3 className="settings-sub">Ready-made colors</h3>

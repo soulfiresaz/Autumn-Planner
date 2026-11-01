@@ -58,7 +58,7 @@ export function ColorGuide({ watch }: { watch: string }) {
         </div>
       </div>
       <div className="guide-tags">
-        {tag(1, 'Behind the page', 'Chosen for you: a slightly deeper shade of your page color, so the page stands out. You do not pick this one.', hex.bg)}
+        {tag(1, 'Behind the page', 'Starts as a deeper shade of your page color, so the page stands apart. You can pick your own in Color behind the page.', hex.bg)}
         {tag(2, 'Page color', 'The color you pick in Page color. It is the paper you write on, and it is exactly the color you chose.', hex.page)}
         {tag(3, 'Section panel', 'The soft boxes that group things on a page, such as Weather, Priorities and Habits.', hex.panel)}
         {tag(4, 'Highlight card', 'The boxes with their own tint, such as Reminders and In the car. They are meant to stand out from the plain panels.', hex.card)}
