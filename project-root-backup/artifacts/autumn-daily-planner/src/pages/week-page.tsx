@@ -1,10 +1,24 @@
-import { CalendarDays } from 'lucide-react';
-import { Link, Redirect } from 'wouter';
+import { Link, Redirect, useLocation } from 'wouter';
 import { PageLayout, PrintMenu, SheetTabs, StepLinks } from '@/components/nav';
-import { WEEKS, addDays, clampToRange, monthOf, weekNumber, weekRangeLabel } from '@/lib/dates';
+import { WEEKS, addDays, fmtMonthDayShort, fmtWeekday, inRange, todayISO, weekNumber, weekRangeLabel } from '@/lib/dates';
 import { Scope } from '@/lib/planner-store';
 import { useDocumentTitle, usePrintMode } from '@/lib/use-print';
 import { WEEK_SHEETS, WeekSheet } from './week-sheets';
+
+const LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+function WeekPicker({ ws, slug }: { ws: string; slug: string }) {
+  const [, setLocation] = useLocation();
+  return (
+    <label className="week-picker">
+      <span className="sr-only">Choose a week</span>
+      <select value={ws} onChange={e => setLocation(`/week/${e.target.value}/${slug}`)} aria-label="Choose a week" data-testid="week-picker">
+        {WEEKS.map(w => <option key={w} value={w}>{`Week ${weekNumber(w)} \u00b7 ${fmtMonthDayShort(w)} \u2013 ${fmtMonthDayShort(addDays(w, 6))}`}</option>)}
+      </select>
+      <span className="step-of">of {WEEKS.length}</span>
+    </label>
+  );
+}
 
 export default function WeekPage({ ws, sheet }: { ws: string; sheet?: string }) {
   const sheetIndex = sheet ? WEEK_SHEETS.findIndex(s => s.slug === sheet) : 0;
@@ -16,14 +30,22 @@ export default function WeekPage({ ws, sheet }: { ws: string; sheet?: string }) 
   const prev = WEEKS[i - 1];
   const next = WEEKS[i + 1];
   const slug = WEEK_SHEETS[sheetIndex].slug;
-  const month = monthOf(clampToRange(addDays(ws, 3)));
+  const today = todayISO();
 
   const bar = (
     <div className="context-bar">
       <div className="context-left">
-        <Link href={`/month/${month}`} className="chip-link" data-testid="link-calendar">
-          <CalendarDays size={15} strokeWidth={1.7} /> <span>Calendar</span>
-        </Link>
+        <nav className="day-letters" aria-label="Days of this week">
+          {LETTERS.map((letter, k) => {
+            const d = addDays(ws, k);
+            const label = `${fmtWeekday(d)}, ${fmtMonthDayShort(d)}`;
+            return inRange(d) ? (
+              <Link key={d} href={`/day/${d}`} className={`day-letter ${d === today ? 'is-today' : ''}`} aria-label={label} title={label} data-testid={`weekday-${k}`}>{letter}</Link>
+            ) : (
+              <span key={d} className="day-letter is-outside" aria-hidden="true">{letter}</span>
+            );
+          })}
+        </nav>
       </div>
       <StepLinks
         prev={prev && `/week/${prev}/${slug}`}
@@ -31,7 +53,7 @@ export default function WeekPage({ ws, sheet }: { ws: string; sheet?: string }) 
         prevLabel="Previous week"
         nextLabel="Next week"
       >
-        <span className="step-label">Week {weekNumber(ws)} <span className="step-of">of {WEEKS.length}</span></span>
+        <WeekPicker ws={ws} slug={slug} />
       </StepLinks>
       <div className="context-actions">
         <PrintMenu

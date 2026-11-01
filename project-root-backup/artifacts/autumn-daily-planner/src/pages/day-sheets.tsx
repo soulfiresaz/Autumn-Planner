@@ -10,7 +10,7 @@ import {
 } from '@/lib/dates';
 import { useHabits } from '@/lib/habits';
 import { useField, usePlannerStore, useRawField } from '@/lib/planner-store';
-import { DAY_TASK_SLOTS, planAdd, useItems, type TaskItem } from '@/lib/tasks';
+import { DAY_TASK_SLOTS, PROJECT_SLOTS, planAdd, useItems, type TaskItem } from '@/lib/tasks';
 
 const range = (n: number) => Array.from({ length: n }, (_, i) => i);
 
@@ -205,9 +205,35 @@ function HoursSheet() {
 
 /* ---------- 3. Tasks & projects ---------- */
 
+function ProjectEditRow({ id }: { id: number }) {
+  const [name, setName] = useRawField(`proj:${id}:name`);
+  const [next, setNext] = useRawField(`proj:${id}:next`);
+  return (
+    <div className="proj-edit-row">
+      <input className="field-input" placeholder={name ? '' : 'New project name'} value={name} onChange={e => setName(e.target.value)} aria-label={`Project ${id + 1} name`} data-testid={`sheet-project-name-${id}`} />
+      {name.trim() && <input className="field-input" placeholder="Next step" value={next} onChange={e => setNext(e.target.value)} aria-label={`Next step for ${name}`} data-testid={`sheet-project-next-${id}`} />}
+    </div>
+  );
+}
+
+function ProjectsPanel() {
+  const { values } = usePlannerStore();
+  let last = -1;
+  for (let i = 0; i < PROJECT_SLOTS; i++) if (typeof values[`proj:${i}:name`] === 'string') last = i;
+  const count = Math.min(PROJECT_SLOTS, last + 2);
+  return (
+    <div className="projects-panel screen-only" data-testid="projects-panel">
+      <div className="section-label"><span className="label-dot" />Your projects &middot; name them here, then pick one on any task</div>
+      {Array.from({ length: count }, (_, i) => <ProjectEditRow key={i} id={i} />)}
+      <Link href="/projects" className="inline-link projects-more">Open the Projects page for notes and every task in a project</Link>
+    </div>
+  );
+}
+
 function TasksSheet({ date }: { date: string }) {
   return (
     <>
+      <ProjectsPanel />
       <div className="task-head" aria-hidden="true"><span /><span>Task</span><span>Priority &middot; due &middot; project</span></div>
       {range(DAY_TASK_SLOTS).map(n => <TaskRow key={n} meta item={{ scope: `d:${date}`, prefix: 't', n }} />)}
       <div className="two-column task-notes">

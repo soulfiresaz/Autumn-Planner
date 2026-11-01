@@ -68,7 +68,7 @@ export function MoveMenu({ item, label = 'Move this task', onMoved }: { item: It
   );
 }
 
-const PRIORITIES = ['', 'H', 'M', 'L'];
+const PRIORITIES: [string, string][] = [['', 'Priority'], ['H', 'High'], ['M', 'Medium'], ['L', 'Low']];
 
 export function ProjectSelect({ value, onChange, label, className = 'task-select' }: { value: string; onChange: (v: string) => void; label: string; className?: string }) {
   const projects = useProjects();
@@ -102,8 +102,8 @@ export function TaskRow({
       />
       {meta && !moved && (
         <div className="task-meta">
-          <select className={`task-select pri ${it.pri ? '' : 'is-empty'}`} aria-label="Priority" value={it.pri} onChange={e => set('pri', e.target.value)}>
-            {PRIORITIES.map(p => <option key={p} value={p}>{p || 'H·M·L'}</option>)}
+          <select className={`task-select pri ${it.pri ? '' : 'is-empty'}`} aria-label="Priority: high, medium or low" value={it.pri} onChange={e => set('pri', e.target.value)}>
+            {PRIORITIES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
           </select>
           <input className="task-due" aria-label="Due" placeholder="due" value={it.due} onChange={e => set('due', e.target.value)} />
           <ProjectSelect value={it.proj} onChange={v => set('proj', v)} label="Project" />
