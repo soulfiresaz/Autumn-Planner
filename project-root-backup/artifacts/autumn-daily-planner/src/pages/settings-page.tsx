@@ -1,9 +1,9 @@
 import { Check, X } from 'lucide-react';
-import { DARK_PRESETS, clampDark, BG_PRESETS, DEFAULT_BG, DEFAULT_NAME, MAX_SAVED, PRESETS, softMatches, useSettings } from '@/lib/settings';
+import { TEXT_SIZES, DARK_PRESETS, clampDark, BG_PRESETS, DEFAULT_BG, DEFAULT_NAME, MAX_SAVED, PRESETS, softMatches, useSettings } from '@/lib/settings';
 import { PlainPage } from './plain-page';
 
 export default function SettingsPage() {
-  const { accent, setAccent, nameRaw, setName, saved, setSaved, bg, setBg, savedBg, setSavedBg, theme, setTheme, darkBase, setDark, savedDark, setSavedDark } = useSettings();
+  const { accent, setAccent, nameRaw, setName, saved, setSaved, bg, setBg, savedBg, setSavedBg, theme, setTheme, textSize, setTextSize, darkBase, setDark, savedDark, setSavedDark } = useSettings();
   const darkSaved = savedDark.includes(darkBase);
   const darkSwatch = (c: string, label?: string, removable = false) => (
     <span key={c} className="swatch-wrap">
@@ -37,6 +37,16 @@ export default function SettingsPage() {
       <section className="settings-block">
         <h2 className="settings-h">Planner name</h2>
         <input className="search-box" value={nameRaw} placeholder={DEFAULT_NAME} maxLength={40} aria-label="Planner name" data-testid="setting-name" onChange={e => setName(e.target.value)} />
+      </section>
+
+      <section className="settings-block">
+        <h2 className="settings-h">Text size</h2>
+        <div className="seg" role="group" aria-label="Text size">
+          {TEXT_SIZES.map(t => (
+            <button key={t.id} type="button" className={`seg-btn ${textSize === t.id ? 'on' : ''}`} aria-pressed={textSize === t.id} onClick={() => setTextSize(t.id === 'medium' ? '' : t.id)} data-testid={`size-${t.id}`}>{t.label}</button>
+          ))}
+        </div>
+        <p className="soft-hint">Changes all the small writing, on this device and every page. Printing always stays the same size.</p>
       </section>
 
       <section className="settings-block">

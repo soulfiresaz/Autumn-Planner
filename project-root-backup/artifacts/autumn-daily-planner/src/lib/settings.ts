@@ -23,6 +23,14 @@ export const DARK_PRESETS = [
 ];
 export type ThemeMode = 'device' | 'light' | 'dark';
 
+export type TextSize = 'small' | 'medium' | 'large' | 'xl';
+export const TEXT_SIZES: { id: TextSize; label: string; scale: number }[] = [
+  { id: 'small', label: 'Small', scale: 0.92 },
+  { id: 'medium', label: 'Medium', scale: 1 },
+  { id: 'large', label: 'Large', scale: 1.15 },
+  { id: 'xl', label: 'Extra large', scale: 1.32 },
+];
+
 export const isHex = (s: string) => /^#[0-9a-f]{6}$/i.test(s);
 
 function rgb(hex: string): [number, number, number] {
@@ -143,6 +151,8 @@ export function useSettings() {
   const [accentRaw, setAccent] = useRawField('s:accent');
   const [nameRaw, setName] = useRawField('s:name');
   const [savedRaw, setSavedRaw] = useRawField('s:saved');
+  const [sizeRaw, setSize] = useRawField('s:size');
+  const textSize: TextSize = TEXT_SIZES.some(t => t.id === sizeRaw) ? (sizeRaw as TextSize) : 'medium';
   const [themeRaw, setTheme] = useRawField('s:theme');
   const [darkRaw, setDark] = useRawField('s:dark');
   const [savedDarkRaw, setSavedDarkRaw] = useRawField('s:saveddark');
@@ -158,7 +168,7 @@ export function useSettings() {
   const accent = isHex(accentRaw) ? accentRaw.toLowerCase() : DEFAULT_ACCENT;
   const saved = savedRaw.split(',').filter(isHex);
   const setSaved = (list: string[]) => setSavedRaw(list.join(','));
-  return { theme, setTheme, darkBase, setDark, savedDark, setSavedDark, bg, setBg, savedBg, setSavedBg, accent, setAccent, name: nameRaw.trim() || DEFAULT_NAME, nameRaw, setName, saved, setSaved };
+  return { textSize, setTextSize: setSize, theme, setTheme, darkBase, setDark, savedDark, setSavedDark, bg, setBg, savedBg, setSavedBg, accent, setAccent, name: nameRaw.trim() || DEFAULT_NAME, nameRaw, setName, saved, setSaved };
 }
 
 export function usePlannerName() {
@@ -168,7 +178,7 @@ export function usePlannerName() {
 
 /** Keeps the page colors in step with the chosen theme, accent and background. */
 export function useApplyAccent() {
-  const { accent, bg, theme, darkBase } = useSettings();
+  const { accent, bg, theme, darkBase, textSize } = useSettings();
   const [sys, setSys] = useState(() => window.matchMedia('(prefers-color-scheme: dark)').matches);
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
@@ -184,6 +194,8 @@ export function useApplyAccent() {
       document.documentElement.style.setProperty('--accent-orig', accent);
       applyBg(!isDark && bg !== DEFAULT_BG ? bg : '');
     };
+    const scale = TEXT_SIZES.find(t => t.id === textSize)!.scale;
+    document.documentElement.style.setProperty('--text-scale', String(scale));
     show(dark);
     // Printing always uses the light pages with dark writing.
     const before = () => show(false);
@@ -191,5 +203,5 @@ export function useApplyAccent() {
     window.addEventListener('beforeprint', before);
     window.addEventListener('afterprint', after);
     return () => { window.removeEventListener('beforeprint', before); window.removeEventListener('afterprint', after); };
-  }, [dark, accent, bg, darkBase]);
+  }, [dark, accent, bg, darkBase, textSize]);
 }
