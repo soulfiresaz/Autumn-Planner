@@ -270,6 +270,25 @@ function TasksSheet({ date }: { date: string }) {
 
 /* ---------- 4. Nourish ---------- */
 
+function WaterSize() {
+  const [size, setSize] = useField('oz-size');
+  const [unit, setUnit] = useField('oz-unit');
+  return (
+    <div className="water-size">
+      <span>Each one is</span>
+      <input
+        className="water-size-input" inputMode="decimal" maxLength={6} value={size}
+        aria-label="Size of each glass or bottle" data-testid="oz-size"
+        onChange={e => setSize(e.target.value)}
+      />
+      <select className="water-unit" value={unit || 'oz'} aria-label="Unit" data-testid="oz-unit" onChange={e => setUnit(e.target.value)}>
+        <option value="oz">ounces</option>
+        <option value="ml">milliliters</option>
+      </select>
+    </div>
+  );
+}
+
 function OunceBox({ index }: { index: number }) {
   const [value, setValue] = useField(`oz-${index}`);
   return (
@@ -292,10 +311,12 @@ function WaterGrid() {
     const n = typeof v === 'string' ? parseFloat(v.replace(/[^0-9.]/g, '')) : NaN;
     if (Number.isFinite(n)) total += n;
   }
+  const unit = values[`${scope}:oz-unit`] === 'ml' ? 'ml' : 'oz';
   return (
     <>
+      <WaterSize />
       <div className="water-grid">{range(24).map(i => <OunceBox key={i} index={i} />)}</div>
-      <div className="water-total" data-testid="water-total">Total: <b>{Math.round(total * 10) / 10}</b> oz</div>
+      <div className="water-total" data-testid="water-total">Total: <b>{Math.round(total * 10) / 10}</b> {unit}</div>
     </>
   );
 }
@@ -316,7 +337,6 @@ function NourishSheet() {
       </section>
       <section>
         <div className="section-label"><span className="label-dot" />Water</div>
-        <p className="soft-hint">Each one is 16 ounces, or whatever ounces you want.</p>
         <WaterGrid />
         <div className="section-label grocery-label"><span className="label-dot" />Grocery &amp; pantry &middot; what to pick up</div>
         <PlainTextarea name="grocery" label="Grocery and pantry" className="field-textarea ruled-area grocery-area" />

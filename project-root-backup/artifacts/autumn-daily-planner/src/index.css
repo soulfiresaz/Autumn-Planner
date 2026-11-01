@@ -869,3 +869,9 @@ html, body { overscroll-behavior-x: none; }
 .water-total b { font-family: var(--app-font-serif); font-weight: 400; font-size: 20px; color: #49392e; }
 @media (max-width: 760px) { .water-grid { gap: 18px 5px; } .oz-input { height: 50px; font-size: 16px; } }
 @media print { .print-all .oz-input { height: 32px; } .print-all .water-grid { gap: 12px 6px; } }
+
+.water-size { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 14px; color: #5a4a3c; flex-wrap: wrap; }
+.water-size-input { width: 64px; height: 34px; text-align: center; font-size: 15px; color: #3f4a31; border: 0; border-bottom: 1.5px solid #9fa98b; background: transparent; outline: none; }
+.water-size-input:focus { border-bottom-color: #a85839; }
+.water-unit { height: 34px; font-size: 14px; color: #3f4a31; border: 1px solid #9fa98b; border-radius: 8px; background: rgba(168,174,144,.08); padding: 0 6px; }
+@media (max-width: 760px) { .water-size-input, .water-unit { height: 40px; font-size: 16px; } }
