@@ -292,6 +292,7 @@ function WaterGrid() {
   const total = Number.isFinite(each) ? Math.round(each * glasses * 10) / 10 : 0;
   return (
     <>
+      <div className="water-grid">{range(24).map(i => <Glass key={i} index={i} />)}</div>
       <div className="water-size">
         <span>Each one is</span>
         <input
@@ -307,7 +308,6 @@ function WaterGrid() {
           &times; {glasses} {glasses === 1 ? 'glass' : 'glasses'} = <b>{total}</b> {u}
         </span>
       </div>
-      <div className="water-grid">{range(24).map(i => <Glass key={i} index={i} />)}</div>
     </>
   );
 }
