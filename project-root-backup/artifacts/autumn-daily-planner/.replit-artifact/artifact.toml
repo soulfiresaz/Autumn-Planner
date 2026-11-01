@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Autumn Daily Planner"
+description = "A six-page, blank daily planner with original autumn botanical artwork, editable writing fields and checkboxes, and print-ready page layouts."
+version = "1.0.0"
+id = "artifacts/autumn-daily-planner"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23045
+
+[services.development]
+run = "pnpm --filter @workspace/autumn-daily-planner run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/autumn-daily-planner", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/autumn-daily-planner/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23045"
+BASE_PATH = "/"
