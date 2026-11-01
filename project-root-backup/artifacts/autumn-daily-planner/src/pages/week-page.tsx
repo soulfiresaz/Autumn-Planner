@@ -37,7 +37,7 @@ export default function WeekPage({ ws, sheet }: { ws: string; sheet?: string }) 
         <PrintMenu
           options={[
             { label: 'Print this sheet', run: () => printNow(false) },
-            { label: `Print both week sheets`, run: () => printNow(true) },
+            { label: `Print all week sheets`, run: () => printNow(true) },
           ]}
         />
       </div>

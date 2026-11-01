@@ -1,19 +1,48 @@
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Check, Leaf } from 'lucide-react';
+import { CalendarDays, Check, FolderKanban, Leaf, ListChecks, Search, ShieldCheck } from 'lucide-react';
 import { Link, Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
 import { useHashLocation } from 'wouter/use-hash-location';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { clampToRange, isValidISO, isValidMonth, monthOf, todayISO } from '@/lib/dates';
+import { lastBackup } from '@/lib/backup';
 import { PlannerProvider, usePlannerStore } from '@/lib/planner-store';
+import BackupPage from '@/pages/backup-page';
+import ProjectsPage from '@/pages/projects-page';
+import SearchPage from '@/pages/search-page';
+import TasksPage from '@/pages/tasks-page';
 import DayPage from '@/pages/day-page';
 import MonthPage from '@/pages/month-page';
 import NotFound from '@/pages/not-found';
 import WeekPage from '@/pages/week-page';
 
 const queryClient = new QueryClient();
+
+const NAV = [
+  { href: '/', label: 'Calendar', icon: CalendarDays, match: (l: string) => l === '/' || l.startsWith('/month') || l.startsWith('/week') || l.startsWith('/day') },
+  { href: '/tasks', label: 'Tasks', icon: ListChecks, match: (l: string) => l.startsWith('/tasks') },
+  { href: '/projects', label: 'Projects', icon: FolderKanban, match: (l: string) => l.startsWith('/projects') },
+  { href: '/search', label: 'Search', icon: Search, match: (l: string) => l.startsWith('/search') },
+  { href: '/backup', label: 'Backup', icon: ShieldCheck, match: (l: string) => l.startsWith('/backup') },
+];
+
+function BackupNudge() {
+  const { values } = usePlannerStore();
+  const [location] = useLocation();
+  const [hidden, setHidden] = useState(false);
+  const last = lastBackup();
+  const stale = !last || Date.now() - new Date(last).getTime() > 7 * 86400000;
+  if (hidden || location.startsWith('/backup') || Object.keys(values).length < 12 || !stale) return null;
+  return (
+    <div className="backup-nudge" role="note" data-testid="backup-nudge">
+      <span>Your writing is saved on this device only. A quick backup keeps it safe.</span>
+      <Link href="/backup" className="inline-link">Save a backup</Link>
+      <button type="button" className="mini-btn" onClick={() => setHidden(true)}>Later</button>
+    </div>
+  );
+}
 
 function Shell({ children }: { children: ReactNode }) {
   const { savedState } = usePlannerStore();
@@ -35,6 +64,14 @@ function Shell({ children }: { children: ReactNode }) {
           {savedState === 'saving' ? <><span className="saved-dot" />Saving&hellip;</> : <><Check size={13} /><span>Saved on this device</span></>}
         </div>
       </header>
+      <nav className="app-nav" aria-label="Planner sections">
+        {NAV.map(n => (
+          <Link key={n.href} href={n.href} className={`app-nav-link ${n.match(location) ? 'active' : ''}`} aria-current={n.match(location) ? 'page' : undefined} data-testid={`nav-${n.label.toLowerCase()}`}>
+            <n.icon size={16} strokeWidth={1.7} /><span>{n.label}</span>
+          </Link>
+        ))}
+      </nav>
+      <BackupNudge />
       <ErrorBoundary resetKey={location}>{children}</ErrorBoundary>
     </div>
   );
@@ -51,6 +88,10 @@ function Routes() {
       <Route path="/month/:ym">
         {params => (isValidMonth(params.ym) ? <MonthPage ym={params.ym} /> : <NotFound />)}
       </Route>
+      <Route path="/tasks" component={TasksPage} />
+      <Route path="/projects" component={ProjectsPage} />
+      <Route path="/search" component={SearchPage} />
+      <Route path="/backup" component={BackupPage} />
       <Route path="/week/:ws/:sheet?">
         {params => (isValidISO(params.ws) ? <WeekPage ws={params.ws} sheet={params.sheet} /> : <NotFound />)}
       </Route>

@@ -1,18 +1,21 @@
 import { Link } from 'wouter';
 import { PlainTextarea, TextField } from '@/components/fields';
 import { SheetFrame } from '@/components/sheet';
+import { HOLIDAYS } from '@/lib/holidays';
 import { usePlannerStore } from '@/lib/planner-store';
-import { dayNumber, fmtLong, monthGrid, monthParts, todayISO, weekNumber } from '@/lib/dates';
+import { dayNumber, fmtLong, fmtMonthDayShort, monthGrid, monthParts, todayISO, weekNumber } from '@/lib/dates';
 
 const HEAD = [
   ['S', 'Sunday'], ['M', 'Monday'], ['T', 'Tuesday'], ['W', 'Wednesday'], ['T', 'Thursday'], ['F', 'Friday'], ['S', 'Saturday'],
 ];
 
 export function MonthSheet({ ym }: { ym: string }) {
-  const { daysWithEntries, weeksWithEntries } = usePlannerStore();
+  const { daysWithEntries, weeksWithEntries, values } = usePlannerStore();
   const today = todayISO();
   const { name, year } = monthParts(ym);
   const rows = monthGrid(ym);
+  const specials = (d: string) => (typeof values[`d:${d}:special`] === 'string' ? (values[`d:${d}:special`] as string).trim() : '');
+  const keyDates = rows.flatMap(r => r.days).filter((d): d is string => !!d && (!!HOLIDAYS[d] || !!specials(d)));
 
   return (
     <SheetFrame
@@ -54,11 +57,12 @@ export function MonthSheet({ ym }: { ym: string }) {
                     <Link
                       href={`/day/${d}`}
                       className={`cal-day ${d === today ? 'is-today' : ''} ${daysWithEntries.has(d) ? 'has-entries' : ''}`}
-                      aria-label={`${fmtLong(d)}${d === today ? ', today' : ''}${daysWithEntries.has(d) ? ', has entries' : ''}`}
+                      aria-label={`${fmtLong(d)}${HOLIDAYS[d] ? ', ' + HOLIDAYS[d].label : ''}${specials(d) ? ', ' + specials(d) : ''}${d === today ? ', today' : ''}${daysWithEntries.has(d) ? ', has entries' : ''}`}
                       aria-current={d === today ? 'date' : undefined}
                       data-testid={`link-day-${d}`}
                     >
                       <span className="cal-num">{dayNumber(d)}</span>
+                      {(HOLIDAYS[d] || specials(d)) && <span className="cal-tag" aria-hidden="true">{specials(d) || HOLIDAYS[d].short}</span>}
                       <span className="cal-dot" aria-hidden="true" />
                     </Link>
                   </td>
@@ -75,6 +79,16 @@ export function MonthSheet({ ym }: { ym: string }) {
         <span><i className="lg-today" />today</span>
         <span><i className="lg-dot" />has writing</span>
       </div>
+      {keyDates.length > 0 && (
+        <div className="key-dates" data-testid="key-dates">
+          <div className="section-label"><span className="label-dot" />Key dates</div>
+          <ul>
+            {keyDates.map(d => (
+              <li key={d}><b>{fmtMonthDayShort(d)}</b> {specials(d) || HOLIDAYS[d].label}{specials(d) && HOLIDAYS[d] ? ` · ${HOLIDAYS[d].label}` : ''}</li>
+            ))}
+          </ul>
+        </div>
+      )}
       <div className="month-fields">
         <TextField name="focus" label={`${name} focus`} rows={3} ruled />
         <div className="section-label" style={{ marginTop: 18 }}><span className="label-dot" />Notes for the month</div>

@@ -12,6 +12,10 @@ type SavedState = 'saved' | 'saving';
 type StoreValue = {
   values: Values;
   setValue: (key: string, value: string | boolean) => void;
+  /** Change several saved values at once. Empty strings and false remove a key. */
+  setMany: (updates: Values) => void;
+  /** Replace everything (used when restoring a backup). */
+  replaceAll: (next: Values) => void;
   savedState: SavedState;
   daysWithEntries: Set<string>;
   weeksWithEntries: Set<string>;
@@ -72,6 +76,23 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const setMany = useCallback((updates: Values) => {
+    dirty.current = true;
+    setValues(current => {
+      const next = { ...current };
+      for (const [key, v] of Object.entries(updates)) {
+        if (v === '' || v === false) delete next[key];
+        else next[key] = v;
+      }
+      return next;
+    });
+  }, []);
+
+  const replaceAll = useCallback((next: Values) => {
+    dirty.current = true;
+    setValues({ ...next });
+  }, []);
+
   const { daysWithEntries, weeksWithEntries } = useMemo(() => {
     const days = new Set<string>();
     const weeks = new Set<string>();
@@ -85,8 +106,8 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
   }, [values]);
 
   const value = useMemo(
-    () => ({ values, setValue, savedState, daysWithEntries, weeksWithEntries }),
-    [values, setValue, savedState, daysWithEntries, weeksWithEntries],
+    () => ({ values, setValue, setMany, replaceAll, savedState, daysWithEntries, weeksWithEntries }),
+    [values, setValue, setMany, replaceAll, savedState, daysWithEntries, weeksWithEntries],
   );
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
@@ -120,3 +141,17 @@ export function useToggle(name: string): [boolean, (v: boolean) => void] {
 export function useChoice(name: string): [string, (v: string) => void] {
   return useField(name);
 }
+
+/** Read / write one saved value by its full key (for fields that live outside the current page's scope). */
+export function useRawField(key: string): [string, (v: string) => void] {
+  const { values, setValue } = usePlannerStore();
+  const raw = values[key];
+  return [typeof raw === 'string' ? raw : '', (v: string) => setValue(key, v)];
+}
+
+export function useRawToggle(key: string): [boolean, (v: boolean) => void] {
+  const { values, setValue } = usePlannerStore();
+  return [values[key] === true, (v: boolean) => setValue(key, v)];
+}
+
+export const STORAGE_KEY_NAME = STORAGE_KEY;
