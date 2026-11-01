@@ -1,28 +1,29 @@
 import { Check, X } from 'lucide-react';
 import { ColorGuide } from '@/components/color-guide';
 import { ColorField } from '@/components/color-field';
-import { TEXT_SIZES, DARK_PRESETS, clampDark, BG_PRESETS, DEFAULT_BG, DEFAULT_NAME, MAX_SAVED, PRESETS, softMatches, useSettings } from '@/lib/settings';
+import { TEXT_SIZES, DARK_PRESETS, BG_PRESETS, DEFAULT_BG, DEFAULT_DARK, DEFAULT_NAME, MAX_SAVED, PRESETS, clampDark, clampLight, shade, softMatches, useIsDark, useSettings } from '@/lib/settings';
 import { PlainPage } from './plain-page';
 
 export default function SettingsPage() {
   const { accent, setAccent, nameRaw, setName, saved, setSaved, bg, setBg, savedBg, setSavedBg, theme, setTheme, textSize, setTextSize, darkBase, setDark, savedDark, setSavedDark } = useSettings();
-  const darkSaved = savedDark.includes(darkBase);
-  const darkSwatch = (c: string, label?: string, removable = false) => (
-    <span key={c} className="swatch-wrap">
-      <button type="button" className={`swatch ${c === darkBase ? 'on' : ''}`} style={{ background: c }} title={label} aria-label={`Use dark color ${label ?? c}`} aria-pressed={c === darkBase} onClick={() => setDark(c)} data-testid={`darkswatch-${c.slice(1)}`}>
-          {c === darkBase && <Check size={16} strokeWidth={2.4} color="#fff" />}
-      </button>
-      {removable && <button type="button" className="swatch-x" aria-label={`Remove saved dark color ${c}`} onClick={() => setSavedDark(savedDark.filter(x => x !== c))}><X size={11} strokeWidth={2.6} /></button>}
-    </span>
-  );
-  const bgSaved = savedBg.includes(bg);
+  const isDark = useIsDark();
+
+  // One set of page-color controls, for whichever mode you are looking at.
+  const page = isDark ? darkBase : bg;
+  const setPage = (v: string) => (isDark ? setDark(v) : setBg(v === DEFAULT_BG ? '' : v));
+  const savedPages = isDark ? savedDark : savedBg;
+  const setSavedPages = isDark ? setSavedDark : setSavedBg;
+  const pageSaved = savedPages.includes(page);
+  const shown = isDark ? clampDark(page) : clampLight(page);
+  const behind = shade(shown, isDark ? -0.06 : -0.04);
+  const presets: { hex: string; label?: string }[] = isDark ? DARK_PRESETS : BG_PRESETS.map(hex => ({ hex }));
   const matches = softMatches(accent);
-  const bgSwatch = (c: string, removable = false) => (
+  const pageSwatch = (c: string, label?: string, removable = false) => (
     <span key={c} className="swatch-wrap">
-      <button type="button" className={`swatch ${c === bg ? 'on' : ''}`} style={{ background: c }} aria-label={`Use background ${c}`} aria-pressed={c === bg} onClick={() => setBg(c === DEFAULT_BG ? '' : c)} data-testid={`bgswatch-${c.slice(1)}`}>
-        {c === bg && <Check size={16} strokeWidth={2.4} color="#493a30" />}
+      <button type="button" className={`swatch ${c === page ? 'on' : ''}`} style={{ background: c }} title={label} aria-label={`Use page color ${label ?? c}`} aria-pressed={c === page} onClick={() => setPage(c)} data-testid={`${isDark ? 'dark' : 'bg'}swatch-${c.slice(1)}`}>
+        {c === page && <Check size={16} strokeWidth={2.4} color={isDark ? '#fff' : '#493a30'} />}
       </button>
-      {removable && <button type="button" className="swatch-x" aria-label={`Remove saved background ${c}`} onClick={() => setSavedBg(savedBg.filter(x => x !== c))}><X size={11} strokeWidth={2.6} /></button>}
+      {removable && <button type="button" className="swatch-x" aria-label={`Remove saved color ${c}`} onClick={() => setSavedPages(savedPages.filter(x => x !== c))}><X size={11} strokeWidth={2.6} /></button>}
     </span>
   );
   const isSaved = saved.includes(accent);
@@ -60,28 +61,33 @@ export default function SettingsPage() {
       <section className="settings-block">
         <h2 className="settings-h">Light or dark</h2>
         <div className="seg" role="group" aria-label="Light or dark">
-          {([['device', 'Match my device'], ['light', 'Light'], ['dark', 'Dark']] as const).map(([id, label]) => (
+          {([['light', 'Light'], ['dark', 'Dark'], ['device', 'Match my device']] as const).map(([id, label]) => (
             <button key={id} type="button" className={`seg-btn ${theme === id ? 'on' : ''}`} aria-pressed={theme === id} onClick={() => setTheme(id)} data-testid={`theme-${id}`}>{label}</button>
           ))}
         </div>
-        <h3 className="settings-sub">Dark color</h3>
-        <p className="soft-hint">The color behind the pages in dark mode. The pages and writing shade from it, so any dark color works.</p>
-        <div className="bg-sample" style={{ background: clampDark(darkBase) }} aria-hidden="true" data-testid="dark-sample">
-          <div className="bg-sample-card dark-sample-card" style={{ background: 'color-mix(in srgb, #ffffff 9%, ' + clampDark(darkBase) + ')', borderColor: 'color-mix(in srgb, #ffffff 16%, ' + clampDark(darkBase) + ')' }}><b>Sample</b>Your pages sit on this color.</div>
+        <p className="soft-hint">You are looking at the {isDark ? 'dark' : 'light'} version now. The color choices below are for this version.</p>
+      </section>
+
+      <section className="settings-block">
+        <h2 className="settings-h">Page color &middot; {isDark ? 'dark' : 'light'}</h2>
+        <p className="soft-hint">The color of the page you write on. The color behind it is chosen for you, a little {isDark ? 'darker' : 'deeper'} so the page stands out.</p>
+        <div className="bg-sample" style={{ background: behind }} aria-hidden="true" data-testid="page-sample">
+          <div className="bg-sample-card" style={{ background: shown, borderColor: shade(shown, isDark ? 0.1 : -0.08), color: isDark ? '#fff' : '#483a30' }}><b>Sample</b>This is your page.</div>
         </div>
         <div className="accent-row">
           <label className="color-pick">
-            <ColorField value={darkBase} onCommit={setDark} label="Pick any dark color" testid="dark-input" />
+            <ColorField value={page} onCommit={setPage} label="Pick any page color" testid={isDark ? 'dark-input' : 'bg-input'} />
             <span>Pick any color</span>
           </label>
-          <code className="hex">{darkBase}</code>
-          <button type="button" className="mini-btn" disabled={darkSaved || savedDark.length >= MAX_SAVED} onClick={() => setSavedDark([...savedDark, darkBase])} data-testid="save-dark">{darkSaved ? 'Saved' : 'Save this color'}</button>
-          <button type="button" className="mini-btn" onClick={() => setDark('')} data-testid="reset-dark">Back to the original</button>
+          <code className="hex">{page}</code>
+          <button type="button" className="mini-btn" disabled={pageSaved || savedPages.length >= MAX_SAVED} onClick={() => setSavedPages([...savedPages, page])} data-testid={isDark ? 'save-dark' : 'save-bg'}>{pageSaved ? 'Saved' : 'Save this color'}</button>
+          <button type="button" className="mini-btn" onClick={() => setPage(isDark ? DEFAULT_DARK : DEFAULT_BG)} data-testid={isDark ? 'reset-dark' : 'reset-bg'}>Back to the original</button>
         </div>
-        <h3 className="settings-sub">Ready-made dark colors</h3>
-        <div className="swatches">{DARK_PRESETS.map(c => darkSwatch(c.hex, c.label))}</div>
-        <h3 className="settings-sub">Your saved dark colors</h3>
-        {savedDark.length ? <div className="swatches">{savedDark.map(c => darkSwatch(c, undefined, true))}</div> : <p className="soft-hint">Nothing saved yet.</p>}
+        {!isDark && (<><h3 className="settings-sub">Soft matches for your accent</h3><div className="swatches">{matches.map(c => pageSwatch(c))}</div></>)}
+        <h3 className="settings-sub">Ready-made colors</h3>
+        <div className="swatches">{presets.map(c => pageSwatch(c.hex, c.label))}</div>
+        <h3 className="settings-sub">Your saved colors</h3>
+        {savedPages.length ? <div className="swatches">{savedPages.map(c => pageSwatch(c, undefined, true))}</div> : <p className="soft-hint">Nothing saved yet.</p>}
       </section>
 
       <section className="settings-block">
@@ -109,28 +115,6 @@ export default function SettingsPage() {
           <span className="chip-link is-accent">Button</span>
           <span className="holiday-tag" style={{ position: 'static' }}>a little writing</span>
         </div>
-      </section>
-      <section className="settings-block">
-        <h2 className="settings-h">Background color</h2>
-        <p className="soft-hint">The color behind the pages. The pages stay the same easy-to-read cream.</p>
-        <div className="bg-sample" style={{ background: bg }} aria-hidden="true" data-testid="bg-sample">
-          <div className="bg-sample-card"><b>Sample</b>Your pages sit on this color.</div>
-        </div>
-        <div className="accent-row">
-          <label className="color-pick">
-            <ColorField value={bg} onCommit={setBg} label="Pick any background color" testid="bg-input" />
-            <span>Pick any color</span>
-          </label>
-          <code className="hex">{bg}</code>
-          <button type="button" className="mini-btn" disabled={bgSaved || savedBg.length >= MAX_SAVED} onClick={() => setSavedBg([...savedBg, bg])} data-testid="save-bg">{bgSaved ? 'Saved' : 'Save this color'}</button>
-          <button type="button" className="mini-btn" onClick={() => setBg('')} data-testid="reset-bg">Back to the original</button>
-        </div>
-        <h3 className="settings-sub">Soft matches for your accent</h3>
-        <div className="swatches">{matches.map(c => bgSwatch(c))}</div>
-        <h3 className="settings-sub">Your saved backgrounds</h3>
-        {savedBg.length ? <div className="swatches">{savedBg.map(c => bgSwatch(c, true))}</div> : <p className="soft-hint">Nothing saved yet.</p>}
-        <h3 className="settings-sub">Ready-made light colors</h3>
-        <div className="swatches">{BG_PRESETS.map(c => bgSwatch(c))}</div>
       </section>
     </PlainPage>
   );

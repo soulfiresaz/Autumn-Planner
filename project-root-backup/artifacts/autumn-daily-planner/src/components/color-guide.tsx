@@ -44,9 +44,9 @@ export function ColorGuide({ watch }: { watch: string }) {
   return (
     <div className="color-guide">
       <div className="guide-bg" ref={bgRef} data-testid="guide-bg">
-        <span className="guide-cap">1 &middot; Background</span>
+        <span className="guide-cap">1 &middot; Behind the page</span>
         <div className="guide-page" ref={pageRef}>
-          <span className="guide-cap">2 &middot; Page</span>
+          <span className="guide-cap">2 &middot; Page color</span>
           <div className="guide-panel" ref={panelRef}>
             <span className="guide-cap">3 &middot; Section panel</span>
             <span className="guide-ink" ref={inkRef}>5 &middot; Writing</span>
@@ -58,8 +58,8 @@ export function ColorGuide({ watch }: { watch: string }) {
         </div>
       </div>
       <div className="guide-tags">
-        {tag(1, 'Background', 'The color you can see around the edges, behind the pages. This is the one you choose in Background color (light) or Dark color (dark).', hex.bg)}
-        {tag(2, 'Page', 'The paper you write on. In light mode it is always the same easy-to-read cream. In dark mode it is a lighter shade of your dark color, which is why it does not match the color you picked exactly: your color is the Background around it.', hex.page)}
+        {tag(1, 'Behind the page', 'Chosen for you: a slightly deeper shade of your page color, so the page stands out. You do not pick this one.', hex.bg)}
+        {tag(2, 'Page color', 'The color you pick in Page color. It is the paper you write on, and it is exactly the color you chose.', hex.page)}
         {tag(3, 'Section panel', 'The soft boxes that group things on a page, such as Weather, Priorities and Habits.', hex.panel)}
         {tag(4, 'Highlight card', 'The boxes with their own tint, such as Reminders and In the car. They are meant to stand out from the plain panels.', hex.card)}
         {tag(5, 'Writing', 'Titles, labels and everything you type.', hex.ink)}

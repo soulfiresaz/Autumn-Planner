@@ -8,18 +8,18 @@ export const MAX_SAVED = 12;
 
 export const PRESETS = ['#a85839', '#b8862b', '#687454', '#2f6f73', '#3d5a99', '#6b4c9a', '#a8466f', '#c2492e', '#5a4a3c'];
 
-export const DEFAULT_BG = '#f1ecdf';
-export const BG_PRESETS = ['#f1ecdf', '#f3e6dc', '#f5e9d2', '#e8eddc', '#dfece9', '#e1e7f3', '#ebe3f2', '#f3e1e8', '#ece7e1'];
+export const DEFAULT_BG = '#f9f5e9'; // the light page color
+export const BG_PRESETS = ['#f9f5e9', '#f8ece4', '#faf0d9', '#eef3e2', '#e6f2ef', '#e9eefa', '#f2ebf8', '#f9e8ee', '#f0ebe5'];
 
-export const DEFAULT_DARK = '#2b211b';
+export const DEFAULT_DARK = '#3a2d25'; // the dark page color
 export const DARK_PRESETS = [
-  { hex: '#2b211b', label: 'Candlelight brown' },
-  { hex: '#2a1f3d', label: 'Deep purple' },
-  { hex: '#3a2034', label: 'Plum' },
-  { hex: '#17202e', label: 'Midnight blue' },
-  { hex: '#1c2a22', label: 'Forest' },
-  { hex: '#232323', label: 'Charcoal' },
-  { hex: '#0c0c0c', label: 'Black' },
+  { hex: '#3a2d25', label: 'Candlelight brown' },
+  { hex: '#33274a', label: 'Deep purple' },
+  { hex: '#472b40', label: 'Plum' },
+  { hex: '#232f44', label: 'Midnight blue' },
+  { hex: '#27382d', label: 'Forest' },
+  { hex: '#2e2e2e', label: 'Charcoal' },
+  { hex: '#141414', label: 'Black' },
 ];
 export type ThemeMode = 'device' | 'light' | 'dark';
 
@@ -70,9 +70,9 @@ export function mixHex(a: string, b: string, t: number) {
 
 /** Soft backgrounds that go with an accent color. */
 export const softMatches = (accent: string) => [
-  mixHex(accent, '#ffffff', 0.12),
-  mixHex(accent, DEFAULT_BG, 0.18),
-  mixHex(accent, DEFAULT_BG, 0.3),
+  mixHex(accent, '#ffffff', 0.1),
+  mixHex(accent, DEFAULT_BG, 0.12),
+  mixHex(accent, DEFAULT_BG, 0.2),
 ];
 
 function hexOfHsl(h: number, s: number, l: number): string {
@@ -84,10 +84,22 @@ function hexOfHsl(h: number, s: number, l: number): string {
   return '#' + [f(0), f(8), f(4)].map(v => v.toString(16).padStart(2, '0')).join('');
 }
 
-/** Keep the chosen dark color genuinely dark so the pages and writing stay readable. */
+/** Lighten or darken a color a little, keeping its hue. */
+export function shade(hex: string, delta: number): string {
+  const [h, sat, l] = hslOf(hex);
+  return hexOfHsl(h, sat / 100, Math.min(0.98, Math.max(0.02, l / 100 + delta)));
+}
+
+/** Keep a dark page color genuinely dark so the writing stays readable. */
 export function clampDark(hex: string): string {
   const [h, s, l] = hslOf(hex);
-  return l <= 30 ? hex : hexOfHsl(h, s / 100, 0.3);
+  return l <= 36 ? hex : hexOfHsl(h, s / 100, 0.36);
+}
+
+/** Keep a light page color genuinely light for the same reason. */
+export function clampLight(hex: string): string {
+  const [h, s, l] = hslOf(hex);
+  return l >= 78 ? hex : hexOfHsl(h, s / 100, 0.78);
 }
 
 /** Lighten an accent just enough to be seen on a dark page. */
@@ -111,8 +123,9 @@ function darken(hex: string, base: string): string {
 
 const hslTriplet = (hex: string) => { const [h, s, l] = hslOf(hex); return `${h} ${s}% ${l}%`; };
 
-function darkCss(baseRaw: string): string {
-  const base = clampDark(baseRaw);
+function darkCss(pageRaw: string): string {
+  const page = clampDark(pageRaw);
+  const base = shade(page, -0.06); // the color behind the page, chosen for you
   const d = (hex: string) => darken(hex, base);
   const vars = PALETTE.map(h => `--c-${h.slice(1)}:${d(h)};`).join('');
   const tokens = [
@@ -120,20 +133,29 @@ function darkCss(baseRaw: string): string {
     ['--border', d('#d2c3ad')], ['--input', d('#d2c3ad')], ['--muted', d('#ded2be')], ['--muted-foreground', d('#8a7a68')],
     ['--secondary', d('#d9cbb5')], ['--accent', d('#d9cbb5')],
   ].map(([k, v]) => `${k}:${hslTriplet(v)};`).join('');
-  return `@media screen{html[data-theme="dark"]{color-scheme:dark;--page-bg:${base};${vars}${tokens}}}`;
+  const pageVars = `--paper:${page};--c-f9f5e9:${page};--c-fbf7ec:${shade(page, 0.015)};`;
+  return `@media screen{html[data-theme="dark"]{color-scheme:dark;--page-bg:${base};${vars}${pageVars}${tokens}}}`;
 }
 
-export function applyTheme(dark: boolean, base: string) {
+export function applyTheme(dark: boolean, page: string) {
   const root = document.documentElement;
   let el = document.getElementById('dark-theme') as HTMLStyleElement | null;
   if (!el) { el = document.createElement('style'); el.id = 'dark-theme'; document.head.appendChild(el); }
-  el.textContent = darkCss(base);
+  el.textContent = darkCss(page);
   if (dark) root.setAttribute('data-theme', 'dark'); else root.removeAttribute('data-theme');
 }
 
-export function applyBg(hex: string) {
+const PAGE_PROPS = ['--paper', '--c-f9f5e9', '--c-fbf7ec', '--page-bg'];
+
+/** Light mode: the page is the color you picked, and the color behind it is chosen for you. */
+export function applyLightPage(hex: string) {
   const root = document.documentElement.style;
-  if (isHex(hex)) root.setProperty('--page-bg', hex); else root.removeProperty('--page-bg');
+  if (!isHex(hex) || hex.toLowerCase() === DEFAULT_BG) { PAGE_PROPS.forEach(p => root.removeProperty(p)); return; }
+  const page = clampLight(hex);
+  root.setProperty('--paper', page);
+  root.setProperty('--c-f9f5e9', page);
+  root.setProperty('--c-fbf7ec', shade(page, 0.01));
+  root.setProperty('--page-bg', shade(page, -0.04));
 }
 
 export function applyAccent(hex: string) {
@@ -177,8 +199,8 @@ export function usePlannerName() {
 }
 
 /** Keeps the page colors in step with the chosen theme, accent and background. */
-export function useApplyAccent() {
-  const { accent, bg, theme, darkBase, textSize } = useSettings();
+export function useIsDark() {
+  const { theme } = useSettings();
   const [sys, setSys] = useState(() => window.matchMedia('(prefers-color-scheme: dark)').matches);
   useEffect(() => {
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
@@ -186,13 +208,18 @@ export function useApplyAccent() {
     mq.addEventListener('change', on);
     return () => mq.removeEventListener('change', on);
   }, []);
-  const dark = theme === 'dark' || (theme === 'device' && sys);
+  return theme === 'dark' || (theme === 'device' && sys);
+}
+
+export function useApplyAccent() {
+  const { accent, bg, darkBase, textSize } = useSettings();
+  const dark = useIsDark();
   useEffect(() => {
     const show = (isDark: boolean) => {
       applyTheme(isDark, darkBase);
       applyAccent(isDark ? accentForDark(accent) : accent);
       document.documentElement.style.setProperty('--accent-orig', accent);
-      applyBg(!isDark && bg !== DEFAULT_BG ? bg : '');
+      applyLightPage(isDark ? '' : bg);
     };
     const scale = TEXT_SIZES.find(t => t.id === textSize)!.scale;
     document.documentElement.style.setProperty('--text-scale', String(scale));
