@@ -315,7 +315,8 @@ function NourishSheet() {
         ))}
       </section>
       <section>
-        <div className="section-label"><span className="label-dot" />Water &middot; ounces in each glass or bottle</div>
+        <div className="section-label"><span className="label-dot" />Water</div>
+        <p className="soft-hint">Each box is a blank glass or bottle. Type its ounces, such as 3, 8, 16 or 32.</p>
         <WaterGrid />
         <div className="section-label grocery-label"><span className="label-dot" />Grocery &amp; pantry &middot; what to pick up</div>
         <PlainTextarea name="grocery" label="Grocery and pantry" className="field-textarea ruled-area grocery-area" />
