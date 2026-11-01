@@ -9,7 +9,7 @@ import {
   addDays, fmtLong, fmtMonthDayShort, fmtWeekday, fromISO, weekNumber, weekStart,
 } from '@/lib/dates';
 import { useHabits } from '@/lib/habits';
-import { useField, usePlannerStore, useRawField } from '@/lib/planner-store';
+import { useField, usePlannerStore, useRawField, useScopeName } from '@/lib/planner-store';
 import { DAY_TASK_SLOTS, PROJECT_SLOTS, highPriorityFor, planAdd, projectScope, useItems, useProjects, type TaskItem } from '@/lib/tasks';
 
 const range = (n: number) => Array.from({ length: n }, (_, i) => i);
@@ -270,6 +270,36 @@ function TasksSheet({ date }: { date: string }) {
 
 /* ---------- 4. Nourish ---------- */
 
+function OunceBox({ index }: { index: number }) {
+  const [value, setValue] = useField(`oz-${index}`);
+  return (
+    <label className={`oz-bottle ${value.trim() ? 'has-value' : ''}`}>
+      <input
+        className="oz-input" inputMode="decimal" value={value} maxLength={8}
+        aria-label={`Ounces in glass ${index + 1}`} data-testid={`oz-${index}`}
+        onChange={e => setValue(e.target.value)}
+      />
+    </label>
+  );
+}
+
+function WaterGrid() {
+  const { values } = usePlannerStore();
+  const scope = useScopeName();
+  let total = 0;
+  for (let i = 0; i < 24; i++) {
+    const v = values[`${scope}:oz-${i}`];
+    const n = typeof v === 'string' ? parseFloat(v.replace(/[^0-9.]/g, '')) : NaN;
+    if (Number.isFinite(n)) total += n;
+  }
+  return (
+    <>
+      <div className="water-grid">{range(24).map(i => <OunceBox key={i} index={i} />)}</div>
+      <div className="water-total" data-testid="water-total">Total: <b>{Math.round(total * 10) / 10}</b> oz</div>
+    </>
+  );
+}
+
 const MEAL_NAMES = [['breakfast', 'Breakfast'], ['lunch', 'Lunch'], ['dinner', 'Dinner'], ['snacks', 'Snacks & drinks']];
 
 function NourishSheet() {
@@ -285,9 +315,8 @@ function NourishSheet() {
         ))}
       </section>
       <section>
-        <div className="section-label"><span className="label-dot" />Water &middot; fill one for each glass</div>
-        <div className="water-track">{range(8).map(i => <CheckInput key={i} name={`water-${i}`} label={`Water glass ${i + 1}`} className="water-check" />)}</div>
-        <div className="hint-text">Each mark is a small pause.</div>
+        <div className="section-label"><span className="label-dot" />Water &middot; ounces in each glass or bottle</div>
+        <WaterGrid />
         <div className="section-label grocery-label"><span className="label-dot" />Grocery &amp; pantry &middot; what to pick up</div>
         <PlainTextarea name="grocery" label="Grocery and pantry" className="field-textarea ruled-area grocery-area" />
       </section>

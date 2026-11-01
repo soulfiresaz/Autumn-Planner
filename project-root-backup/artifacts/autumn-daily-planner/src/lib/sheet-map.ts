@@ -3,7 +3,7 @@ const DAY_RULES: [RegExp, string][] = [
   [/^(rem-|weather|special|intention|listen|p-|appt-|brain|focus-proj)/, 'begin'],
   [/^(h-|side-)/, 'hours'],
   [/^(t-|proj-notes|waiting)/, 'tasks'],
-  [/^(meal-|water-|grocery)/, 'nourish'],
+  [/^(meal-|water-|oz-|grocery)/, 'nourish'],
   [/^(mv-|sleep-|rest|mood|move-note)/, 'move'],
   [/^(win|learn|grat-|joy|tom-|gentle)/, 'evening'],
 ];

@@ -54,6 +54,20 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     return () => window.clearTimeout(timer);
   }, [values]);
 
+  // Save right away if the page is closed or sent to the background before the short delay is up.
+  const latest = useRef(values);
+  latest.current = values;
+  useEffect(() => {
+    const flush = () => {
+      if (!dirty.current) return;
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(latest.current)); } catch { /* storage may be blocked */ }
+    };
+    const onHide = () => { if (document.visibilityState === 'hidden') flush(); };
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', onHide);
+    return () => { window.removeEventListener('pagehide', flush); document.removeEventListener('visibilitychange', onHide); };
+  }, []);
+
   // Keep two open tabs in step.
   useEffect(() => {
     const onStorage = (event: StorageEvent) => {
@@ -121,6 +135,10 @@ export function usePlannerStore() {
 /** Wraps a page so every field inside saves under that day / week / month. */
 export function Scope({ scope, children }: { scope: string; children: ReactNode }) {
   return <ScopeContext.Provider value={scope}>{children}</ScopeContext.Provider>;
+}
+
+export function useScopeName() {
+  return useContext(ScopeContext);
 }
 
 export function useField(name: string): [string, (v: string) => void] {
