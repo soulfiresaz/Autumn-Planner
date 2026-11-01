@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRawField } from '@/lib/planner-store';
+import { PALETTE } from '@/lib/palette';
 
 export const DEFAULT_ACCENT = '#a85839';
 export const DEFAULT_NAME = 'My Planner';
@@ -9,6 +10,18 @@ export const PRESETS = ['#a85839', '#b8862b', '#687454', '#2f6f73', '#3d5a99', '
 
 export const DEFAULT_BG = '#f1ecdf';
 export const BG_PRESETS = ['#f1ecdf', '#f3e6dc', '#f5e9d2', '#e8eddc', '#dfece9', '#e1e7f3', '#ebe3f2', '#f3e1e8', '#ece7e1'];
+
+export const DEFAULT_DARK = '#2b211b';
+export const DARK_PRESETS = [
+  { hex: '#2b211b', label: 'Candlelight brown' },
+  { hex: '#2a1f3d', label: 'Deep purple' },
+  { hex: '#3a2034', label: 'Plum' },
+  { hex: '#17202e', label: 'Midnight blue' },
+  { hex: '#1c2a22', label: 'Forest' },
+  { hex: '#232323', label: 'Charcoal' },
+  { hex: '#0c0c0c', label: 'Black' },
+];
+export type ThemeMode = 'device' | 'light' | 'dark';
 
 export const isHex = (s: string) => /^#[0-9a-f]{6}$/i.test(s);
 
@@ -54,6 +67,62 @@ export const softMatches = (accent: string) => [
   mixHex(accent, DEFAULT_BG, 0.3),
 ];
 
+function hexOfHsl(h: number, s: number, l: number): string {
+  const a = s * Math.min(l, 1 - l);
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12;
+    return Math.round(255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1))));
+  };
+  return '#' + [f(0), f(8), f(4)].map(v => v.toString(16).padStart(2, '0')).join('');
+}
+
+/** Keep the chosen dark color genuinely dark so the pages and writing stay readable. */
+export function clampDark(hex: string): string {
+  const [h, s, l] = hslOf(hex);
+  return l <= 30 ? hex : hexOfHsl(h, s / 100, 0.3);
+}
+
+/** Lighten an accent just enough to be seen on a dark page. */
+export function accentForDark(hex: string): string {
+  const [h, s, l] = hslOf(hex);
+  return l >= 62 ? hex : hexOfHsl(h, s / 100, 0.62);
+}
+
+/** The dark version of any planner color, tinted toward the chosen dark base. */
+function darken(hex: string, base: string): string {
+  const [h, s, l] = hslOf(hex).map((v, i) => (i === 0 ? v : v / 100)) as [number, number, number];
+  const [bh, bs, bl] = hslOf(base).map((v, i) => (i === 0 ? v : v / 100)) as [number, number, number];
+  const lo = bl + 0.06, hi = 0.92;
+  const t = Math.min(1, Math.max(0, (1 - l) / 0.9));
+  const L = lo + t * (hi - lo);
+  const neutral = h >= 10 && h <= 62 && (s < 0.95 || l > 0.85);
+  const H = neutral ? bh : h;
+  const S = neutral ? Math.min(s, bs * 1.1) : s * 0.85;
+  return hexOfHsl(H, S, L);
+}
+
+const hslTriplet = (hex: string) => { const [h, s, l] = hslOf(hex); return `${h} ${s}% ${l}%`; };
+
+function darkCss(baseRaw: string): string {
+  const base = clampDark(baseRaw);
+  const d = (hex: string) => darken(hex, base);
+  const vars = PALETTE.map(h => `--c-${h.slice(1)}:${d(h)};`).join('');
+  const tokens = [
+    ['--background', base], ['--foreground', d('#493a30')], ['--card', d('#fffaf0')], ['--card-foreground', d('#493a30')],
+    ['--border', d('#d2c3ad')], ['--input', d('#d2c3ad')], ['--muted', d('#ded2be')], ['--muted-foreground', d('#8a7a68')],
+    ['--secondary', d('#d9cbb5')], ['--accent', d('#d9cbb5')],
+  ].map(([k, v]) => `${k}:${hslTriplet(v)};`).join('');
+  return `@media screen{html[data-theme="dark"]{color-scheme:dark;--page-bg:${base};${vars}${tokens}}}`;
+}
+
+export function applyTheme(dark: boolean, base: string) {
+  const root = document.documentElement;
+  let el = document.getElementById('dark-theme') as HTMLStyleElement | null;
+  if (!el) { el = document.createElement('style'); el.id = 'dark-theme'; document.head.appendChild(el); }
+  el.textContent = darkCss(base);
+  if (dark) root.setAttribute('data-theme', 'dark'); else root.removeAttribute('data-theme');
+}
+
 export function applyBg(hex: string) {
   const root = document.documentElement.style;
   if (isHex(hex)) root.setProperty('--page-bg', hex); else root.removeProperty('--page-bg');
@@ -74,6 +143,13 @@ export function useSettings() {
   const [accentRaw, setAccent] = useRawField('s:accent');
   const [nameRaw, setName] = useRawField('s:name');
   const [savedRaw, setSavedRaw] = useRawField('s:saved');
+  const [themeRaw, setTheme] = useRawField('s:theme');
+  const [darkRaw, setDark] = useRawField('s:dark');
+  const [savedDarkRaw, setSavedDarkRaw] = useRawField('s:saveddark');
+  const theme: ThemeMode = themeRaw === 'light' || themeRaw === 'dark' ? themeRaw : 'device';
+  const darkBase = isHex(darkRaw) ? darkRaw.toLowerCase() : DEFAULT_DARK;
+  const savedDark = savedDarkRaw.split(',').filter(isHex);
+  const setSavedDark = (list: string[]) => setSavedDarkRaw(list.join(','));
   const [bgRaw, setBg] = useRawField('s:bg');
   const [savedBgRaw, setSavedBgRaw] = useRawField('s:savedbg');
   const bg = isHex(bgRaw) ? bgRaw.toLowerCase() : DEFAULT_BG;
@@ -82,7 +158,7 @@ export function useSettings() {
   const accent = isHex(accentRaw) ? accentRaw.toLowerCase() : DEFAULT_ACCENT;
   const saved = savedRaw.split(',').filter(isHex);
   const setSaved = (list: string[]) => setSavedRaw(list.join(','));
-  return { bg, setBg, savedBg, setSavedBg, accent, setAccent, name: nameRaw.trim() || DEFAULT_NAME, nameRaw, setName, saved, setSaved };
+  return { theme, setTheme, darkBase, setDark, savedDark, setSavedDark, bg, setBg, savedBg, setSavedBg, accent, setAccent, name: nameRaw.trim() || DEFAULT_NAME, nameRaw, setName, saved, setSaved };
 }
 
 export function usePlannerName() {
@@ -90,9 +166,29 @@ export function usePlannerName() {
   return n.trim() || DEFAULT_NAME;
 }
 
-/** Keeps the page colors in step with the chosen accent. */
+/** Keeps the page colors in step with the chosen theme, accent and background. */
 export function useApplyAccent() {
-  const { accent, bg } = useSettings();
-  useEffect(() => { applyAccent(accent); }, [accent]);
-  useEffect(() => { applyBg(bg === DEFAULT_BG ? '' : bg); }, [bg]);
+  const { accent, bg, theme, darkBase } = useSettings();
+  const [sys, setSys] = useState(() => window.matchMedia('(prefers-color-scheme: dark)').matches);
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const on = () => setSys(mq.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
+  const dark = theme === 'dark' || (theme === 'device' && sys);
+  useEffect(() => {
+    const show = (isDark: boolean) => {
+      applyTheme(isDark, darkBase);
+      applyAccent(isDark ? accentForDark(accent) : accent);
+      applyBg(!isDark && bg !== DEFAULT_BG ? bg : '');
+    };
+    show(dark);
+    // Printing always uses the light pages with dark writing.
+    const before = () => show(false);
+    const after = () => show(dark);
+    window.addEventListener('beforeprint', before);
+    window.addEventListener('afterprint', after);
+    return () => { window.removeEventListener('beforeprint', before); window.removeEventListener('afterprint', after); };
+  }, [dark, accent, bg, darkBase]);
 }

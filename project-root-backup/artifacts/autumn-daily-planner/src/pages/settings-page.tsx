@@ -1,9 +1,18 @@
 import { Check, X } from 'lucide-react';
-import { BG_PRESETS, DEFAULT_BG, DEFAULT_NAME, MAX_SAVED, PRESETS, softMatches, useSettings } from '@/lib/settings';
+import { DARK_PRESETS, clampDark, BG_PRESETS, DEFAULT_BG, DEFAULT_NAME, MAX_SAVED, PRESETS, softMatches, useSettings } from '@/lib/settings';
 import { PlainPage } from './plain-page';
 
 export default function SettingsPage() {
-  const { accent, setAccent, nameRaw, setName, saved, setSaved, bg, setBg, savedBg, setSavedBg } = useSettings();
+  const { accent, setAccent, nameRaw, setName, saved, setSaved, bg, setBg, savedBg, setSavedBg, theme, setTheme, darkBase, setDark, savedDark, setSavedDark } = useSettings();
+  const darkSaved = savedDark.includes(darkBase);
+  const darkSwatch = (c: string, label?: string, removable = false) => (
+    <span key={c} className="swatch-wrap">
+      <button type="button" className={`swatch ${c === darkBase ? 'on' : ''}`} style={{ background: c }} title={label} aria-label={`Use dark color ${label ?? c}`} aria-pressed={c === darkBase} onClick={() => setDark(c)} data-testid={`darkswatch-${c.slice(1)}`}>
+          {c === darkBase && <Check size={16} strokeWidth={2.4} color="#fff" />}
+      </button>
+      {removable && <button type="button" className="swatch-x" aria-label={`Remove saved dark color ${c}`} onClick={() => setSavedDark(savedDark.filter(x => x !== c))}><X size={11} strokeWidth={2.6} /></button>}
+    </span>
+  );
   const bgSaved = savedBg.includes(bg);
   const matches = softMatches(accent);
   const bgSwatch = (c: string, removable = false) => (
@@ -28,6 +37,33 @@ export default function SettingsPage() {
       <section className="settings-block">
         <h2 className="settings-h">Planner name</h2>
         <input className="search-box" value={nameRaw} placeholder={DEFAULT_NAME} maxLength={40} aria-label="Planner name" data-testid="setting-name" onChange={e => setName(e.target.value)} />
+      </section>
+
+      <section className="settings-block">
+        <h2 className="settings-h">Light or dark</h2>
+        <div className="seg" role="group" aria-label="Light or dark">
+          {([['device', 'Match my device'], ['light', 'Light'], ['dark', 'Dark']] as const).map(([id, label]) => (
+            <button key={id} type="button" className={`seg-btn ${theme === id ? 'on' : ''}`} aria-pressed={theme === id} onClick={() => setTheme(id)} data-testid={`theme-${id}`}>{label}</button>
+          ))}
+        </div>
+        <h3 className="settings-sub">Dark color</h3>
+        <p className="soft-hint">The color behind the pages in dark mode. The pages and writing shade from it, so any dark color works.</p>
+        <div className="bg-sample" style={{ background: clampDark(darkBase) }} aria-hidden="true" data-testid="dark-sample">
+          <div className="bg-sample-card dark-sample-card" style={{ background: 'color-mix(in srgb, #ffffff 9%, ' + clampDark(darkBase) + ')', borderColor: 'color-mix(in srgb, #ffffff 16%, ' + clampDark(darkBase) + ')' }}><b>Sample</b>Your pages sit on this color.</div>
+        </div>
+        <div className="accent-row">
+          <label className="color-pick">
+            <input type="color" value={darkBase} onChange={e => setDark(e.target.value)} aria-label="Pick any dark color" data-testid="dark-input" />
+            <span>Pick any color</span>
+          </label>
+          <code className="hex">{darkBase}</code>
+          <button type="button" className="mini-btn" disabled={darkSaved || savedDark.length >= MAX_SAVED} onClick={() => setSavedDark([...savedDark, darkBase])} data-testid="save-dark">{darkSaved ? 'Saved' : 'Save this color'}</button>
+          <button type="button" className="mini-btn" onClick={() => setDark('')} data-testid="reset-dark">Back to the original</button>
+        </div>
+        <h3 className="settings-sub">Ready-made dark colors</h3>
+        <div className="swatches">{DARK_PRESETS.map(c => darkSwatch(c.hex, c.label))}</div>
+        <h3 className="settings-sub">Your saved dark colors</h3>
+        {savedDark.length ? <div className="swatches">{savedDark.map(c => darkSwatch(c, undefined, true))}</div> : <p className="soft-hint">Nothing saved yet.</p>}
       </section>
 
       <section className="settings-block">
