@@ -209,7 +209,7 @@
 .habit-table td:first-child { width: 34%; }
 .habit-name { width: 100%; border: 0; outline: 0; background: transparent; color: #493a30; height: 43px; padding: 4px 8px; }
 .habit-name::placeholder { color: transparent; }
-.habit-check { width: 16px; height: 16px; }
+.habit-check { width: 16px; height: 16px; display: grid; margin: 0 auto; }
 .wellness-layout { display: grid; grid-template-columns: 1.5fr .85fr; gap: 36px; }
 .mood-list { border: 1px solid #ded2be; border-radius: 10px; background: rgba(255,255,255,.22); padding: 17px 18px; }
 .mood-item { display: grid; grid-template-columns: 1fr repeat(5, 27px); align-items: center; gap: 5px; min-height: 37px; border-bottom: 1px dotted #ded2be; }
