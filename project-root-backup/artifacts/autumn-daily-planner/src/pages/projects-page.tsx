@@ -34,11 +34,10 @@ export default function ProjectsPage() {
   return (
     <PlainPage title="Projects" subtitle="A project is a bigger goal with its own list of tasks. Open one to work on just that project." testid="projects-page">
       <AddProject />
+      <div className="filter-row">
+        <Link href="/tasks" className="inline-link" data-testid="project-row-tasks">Go to your tasks</Link>
+      </div>
       <div className="project-list">
-        <Link href="/tasks" className="project-row is-tasks" data-testid="project-row-tasks">
-          <span className="pr-main"><b>Tasks</b><i>Your everyday list, written on your days and weeks</i></span>
-          <ChevronRight size={18} />
-        </Link>
         {named.map(i => {
           const mine = items.filter(t => t.scope === projectScope(i));
           const open = mine.filter(t => !t.done && !t.moved).length;
